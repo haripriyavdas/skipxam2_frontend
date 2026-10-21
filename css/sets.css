@@ -1,0 +1,305 @@
+/* My Study Sets (app/sets.html). Load after app.css. */
+
+.sets-page {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-7);
+}
+
+.sets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.sets-header h1 {
+  font-size: clamp(var(--text-2xl), 3vw + 0.5rem, var(--text-3xl));
+}
+
+/* ---------- Search ---------- */
+.sets-search {
+  position: relative;
+  max-width: 420px;
+  margin-bottom: var(--space-4);
+}
+
+.sets-search .icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.sets-search .input {
+  padding-left: 40px;
+  background: var(--color-surface);
+}
+
+/* ---------- Folder chips ---------- */
+.folder-chips {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-4)) var(--space-5);
+  padding: 0 var(--space-4) var(--space-1);
+}
+
+.folder-chip {
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.folder-chip .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.folder-chip[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* ---------- Grid: 1 / 2 / 3 columns ---------- */
+.sets-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 600px) {
+  .sets-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1100px) {
+  .sets-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.sets-no-results {
+  grid-column: 1 / -1;
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+/* ---------- Set card ---------- */
+.set-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.set-card:hover {
+  border-color: color-mix(in srgb, var(--set-colour) 60%, var(--color-border));
+}
+
+.set-card:has(.set-link:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.set-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.set-emoji {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--set-colour) 20%, transparent);
+  font-size: var(--text-2xl);
+}
+
+.set-name {
+  font-size: var(--text-lg);
+  line-height: 1.3;
+}
+
+/* The whole card is clickable through this link's overlay. */
+.set-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.set-link:focus-visible {
+  outline: none;
+}
+
+.set-subject {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: calc(-1 * var(--space-1));
+}
+
+.set-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.set-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.set-meta .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.set-mastery {
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+.set-mastery-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.set-mastery-label span:last-child {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+.set-mastery .progress-fill {
+  background: var(--set-colour);
+}
+
+.set-exam {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.set-exam.is-soon {
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------- Card menu ---------- */
+.set-menu-wrap {
+  position: relative;
+  z-index: 2; /* above the card's link overlay */
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0;
+}
+
+.set-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  z-index: 10;
+  min-width: 190px;
+  padding: var(--space-1);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+}
+
+.set-menu[hidden] {
+  display: none;
+}
+
+.set-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.set-menu button:hover,
+.set-menu button:focus-visible {
+  background: var(--color-surface);
+}
+
+.set-menu button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.set-menu .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}
+
+.set-menu .is-danger,
+.set-menu .is-danger .icon {
+  color: var(--color-danger);
+}
+
+/* A card with an open menu sits above its neighbours so the menu isn't covered. */
+.set-card:has(.set-menu:not([hidden])) {
+  z-index: 5;
+}
+
+/* ---------- Move-to-folder dialog ---------- */
+.folder-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: 0;
+}
+
+.folder-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.folder-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.folder-option input {
+  accent-color: var(--color-accent);
+}
+
+.folder-option span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.folder-option .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}

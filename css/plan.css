@@ -1,0 +1,256 @@
+/* Study plan (app/plan.html). Load after app.css. */
+
+.plan-body {
+  max-width: var(--content-narrow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ---------- Ask for exam date ---------- */
+.plan-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+}
+
+.plan-ask h2 {
+  font-size: var(--text-xl);
+}
+
+.plan-ask-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.plan-ask-form .input,
+.plan-date-form .input {
+  width: auto;
+}
+
+/* ---------- Overview + journey line ---------- */
+.plan-overview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.plan-exam {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+.plan-overview-head .muted {
+  font-size: var(--text-sm);
+}
+
+.plan-date-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.plan-date-form .input {
+  padding: var(--space-1) var(--space-3);
+}
+
+.journey {
+  position: relative;
+  margin: 0 var(--space-5) 0 0;
+}
+
+.journey-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  overflow: hidden;
+}
+
+.journey-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: inherit;
+}
+
+.journey-marker {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 3px solid var(--color-surface);
+  transform: translate(-50%, -50%);
+}
+
+.journey-marker span {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+.journey-end {
+  position: absolute;
+  right: calc(-1 * var(--space-5));
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  transform: translateY(-50%);
+}
+
+.journey-end .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.journey-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.plan-done-line {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+/* ---------- Rebuild banner ---------- */
+.plan-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.plan-banner span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.plan-banner .icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-accent);
+}
+
+/* ---------- Days ---------- */
+.plan-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.plan-day {
+  padding: var(--space-4) var(--space-5);
+}
+
+.plan-day.is-today {
+  border-color: var(--color-accent);
+}
+
+.plan-day.is-exam {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.plan-day.is-overdue {
+  border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+}
+
+.plan-day-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-base);
+}
+
+.plan-day-title .muted {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+}
+
+.plan-day-count {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.plan-day-count.is-complete {
+  color: var(--color-success);
+}
+
+.plan-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.plan-task {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.plan-task-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.plan-task-link:hover {
+  color: var(--color-accent);
+}
+
+.plan-task-tool .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}
+
+.plan-task.is-done .plan-task-link {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.plan-rest {
+  font-size: var(--text-sm);
+}
+
+.plan-exam-day {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--weight-semibold);
+  color: var(--color-accent);
+}

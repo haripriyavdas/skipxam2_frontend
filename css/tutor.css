@@ -1,0 +1,311 @@
+/* AI Tutor (app/tutor.html). Load after app.css. */
+
+.tool-header h1 .badge {
+  vertical-align: middle;
+}
+
+/* ---------- Set picker ---------- */
+.tutor-picker-intro {
+  margin-bottom: var(--space-4);
+}
+
+.tutor-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.tutor-set {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-left: 3px solid var(--set-colour);
+}
+
+.tutor-set:hover {
+  border-color: var(--set-colour);
+}
+
+.tutor-set-emoji {
+  font-size: var(--text-2xl);
+}
+
+.tutor-set-name {
+  display: block;
+  font-weight: var(--weight-bold);
+}
+
+.tutor-set .muted {
+  font-size: var(--text-sm);
+}
+
+/* ---------- Layout ---------- */
+.tutor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 1000px) {
+  .tutor-layout {
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .tutor-side {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+.tutor-side .field {
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- Mastery meter ---------- */
+.meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.meter-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-extrabold);
+}
+
+.meter-track {
+  height: 12px;
+  margin: var(--space-2) 0;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.6s cubic-bezier(0.3, 0.7, 0.3, 1), background var(--transition-fast);
+}
+
+.meter-fill.tier-strong, .meter-value.tier-strong { --c: var(--color-success); }
+.meter-fill.tier-mid,    .meter-value.tier-mid    { --c: var(--color-accent); }
+.meter-fill.tier-weak,   .meter-value.tier-weak   { --c: var(--color-danger); }
+.meter-fill { background: var(--c); }
+.meter-value { color: var(--c); }
+
+.meter-hint {
+  font-size: var(--text-xs);
+}
+
+/* ---------- Chat ---------- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  height: min(72vh, 680px);
+  min-height: 420px;
+  overflow: hidden;
+}
+
+@media (max-width: 899px) {
+  .chat { height: calc(100vh - var(--topbar-height) - var(--tabbar-height) - 220px); min-height: 400px; }
+}
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.chat-name {
+  font-weight: var(--weight-bold);
+}
+
+.chat-status {
+  font-size: var(--text-xs);
+}
+
+.tutor-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+  color: var(--color-on-accent);
+}
+
+.tutor-avatar .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.chat-log {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.msg {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: 88%;
+}
+
+.msg.is-user {
+  align-self: flex-end;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.msg.is-tutor .bubble {
+  background: var(--color-surface-raised);
+  border-bottom-left-radius: 4px;
+}
+
+.msg.is-user .bubble {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-bottom-right-radius: 4px;
+}
+
+.msg.is-user .key-term,
+.msg.is-user code {
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+}
+
+.bubble ul {
+  padding-left: var(--space-5);
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.bubble blockquote {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+
+.tutor-q {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.tutor-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tutor-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.tutor-option:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.tutor-option:disabled {
+  cursor: default;
+}
+
+.tutor-option .option-letter {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--color-surface-raised);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+
+.tutor-option.is-correct { border-color: var(--color-success); background: var(--color-success-soft); }
+.tutor-option.is-wrong   { border-color: var(--color-danger); background: var(--color-danger-soft); }
+
+/* Typing indicator */
+.dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: typing 1.2s infinite ease-in-out;
+}
+
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dots span { animation: none; }
+}
+
+.chat-suggestions {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 0 var(--space-4);
+}
+
+.chat-suggestions:not(:empty) {
+  padding-bottom: var(--space-3);
+}
+
+.suggestion {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.chat-form {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.chat-send {
+  padding: var(--space-3);
+}
