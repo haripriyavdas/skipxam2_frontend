@@ -1,13 +1,20 @@
 /*
- * My Study Sets (app/sets.html). Load after data.js and app.js.
+ * My Sets (app/sets.html). Load after data.js and app.js.
  */
 (function () {
   "use strict";
 
   const main = document.querySelector("main");
 
+  const SORTS = [
+    { value: "recent", label: "Last accessed" },
+    { value: "exam", label: "Exam date" },
+    { value: "name", label: "Name" },
+  ];
+
   const state = {
     query: "",
+    sort: "recent",
     folder: "all", // "all" or a folder id
   };
 
@@ -23,11 +30,16 @@
   }
 
   function sortSets(sets) {
-    return [...sets].sort((a, b) => {
-      const [ga, da] = examRank(a);
-      const [gb, db] = examRank(b);
-      return ga - gb || da - db || a.name.localeCompare(b.name);
-    });
+    const list = [...sets];
+    if (state.sort === "name") return list.sort((a, b) => a.name.localeCompare(b.name));
+    if (state.sort === "exam") {
+      return list.sort((a, b) => {
+        const [ga, da] = examRank(a);
+        const [gb, db] = examRank(b);
+        return ga - gb || da - db || a.name.localeCompare(b.name);
+      });
+    }
+    return list.sort((a, b) => (b.lastOpened || "").localeCompare(a.lastOpened || ""));
   }
 
   function visibleSets() {
@@ -37,102 +49,121 @@
       (!query || set.name.toLowerCase().includes(query)));
   }
 
+  function quizzesTaken(setId) {
+    return getActivities().filter((a) => a.setId === setId && a.type === "quiz").length;
+  }
+
   // ---------------------------------------------------------------------------
   // Rendering
   // ---------------------------------------------------------------------------
 
-  function cardHtml(set, folders) {
-    const mastery = getSetMastery(set);
+  function createCardHtml() {
+    return `
+      <li>
+        <button type="button" class="create-card" data-action="create-set">
+          <span class="create-card-plus">${icon("plus")}</span>
+          <span class="create-card-title">Create study set</span>
+          <span class="muted">Create a new study set to organize your materials</span>
+        </button>
+      </li>`;
+  }
+
+  function cardHtml(set) {
+    const pct = getSetProgress(set);
     const files = set.files.length;
-    const days = set.examDate ? daysUntil(set.examDate) : null;
-    const soon = days !== null && days >= 0 && days <= 3;
-    const folder = state.folder === "all" && folders.find((f) => f.id === set.folderId);
+    const quizzes = quizzesTaken(set.id);
+    const started = set.topics.some((t) => topicStatus(t) !== "not-started");
+    const current = started ? getCurrentTopic(set) : null;
     const name = escapeHtml(set.name);
 
     return `
-      <article class="set-card" style="--set-colour: ${set.colour}">
-        <div class="set-card-top">
-          <span class="set-emoji" aria-hidden="true">${set.emoji}</span>
-          <div class="set-menu-wrap">
-            <button type="button" class="icon-btn set-menu-btn" data-set="${set.id}"
-              aria-haspopup="menu" aria-expanded="false" aria-label="Options for ${name}">${icon("more")}</button>
-            <div class="set-menu" role="menu" hidden>
-              <button type="button" role="menuitem" data-menu="move">${icon("folder")}Move to folder</button>
-              <button type="button" role="menuitem" data-menu="rename">${icon("edit")}Rename</button>
-              <button type="button" role="menuitem" data-menu="delete" class="is-danger">${icon("trash")}Delete</button>
+      <li>
+        <article class="set-card" style="--set-colour: ${set.colour}">
+          <div class="set-card-top">
+            <span class="set-tile" aria-hidden="true">${set.emoji}</span>
+            <h2 class="set-name"><a class="set-link" href="set.html?set=${encodeURIComponent(set.id)}">${name}</a></h2>
+            <div class="set-menu-wrap">
+              <button type="button" class="icon-btn set-menu-btn" data-set="${set.id}"
+                aria-haspopup="menu" aria-expanded="false" aria-label="Options for ${name}">${icon("more")}</button>
+              <div class="set-menu glass" role="menu" hidden>
+                <button type="button" role="menuitem" data-menu="rename">${icon("edit")}Rename</button>
+                <button type="button" role="menuitem" data-menu="move">${icon("folder")}Move to folder</button>
+                <button type="button" role="menuitem" data-menu="delete" class="is-danger">${icon("trash")}Delete</button>
+              </div>
             </div>
           </div>
-        </div>
-        <h2 class="set-name"><a class="set-link" href="set.html?set=${encodeURIComponent(set.id)}">${name}</a></h2>
-        ${set.subject ? `<p class="set-subject">${escapeHtml(set.subject)}</p>` : ""}
-        <p class="set-meta">
-          <span>${icon("file")}${files} ${files === 1 ? "file" : "files"}</span>
-          ${folder ? `<span>${icon("folder")}${escapeHtml(folder.name)}</span>` : ""}
-        </p>
-        <div class="set-mastery">
-          <div class="set-mastery-label"><span>Mastery</span><span>${mastery}%</span></div>
-          <div class="progress progress-thin" aria-hidden="true">
-            <div class="progress-fill" style="width: ${mastery}%"></div>
+
+          <div class="set-progress">
+            <div class="progress progress-thin" aria-hidden="true"><div class="progress-fill" style="width: ${pct}%"></div></div>
+            <span class="set-progress-pct">${pct}%<span class="visually-hidden"> progress</span></span>
           </div>
-        </div>
-        <p class="set-exam${soon ? " is-soon" : ""}">${examLabel(set.examDate)}</p>
-      </article>`;
+
+          <ul class="set-chips">
+            <li>${icon("file")}${files} ${files === 1 ? "material" : "materials"}</li>
+            <li>${icon("quiz")}${quizzes} ${quizzes === 1 ? "quiz" : "quizzes"}</li>
+          </ul>
+
+          <p class="set-last muted">Last studied: ${relativeTime(set.lastOpened)}</p>
+
+          <p class="set-topic-pill${current ? "" : " is-empty"}">
+            ${current ? `${icon("plan")}<span>Current topic: <strong>${escapeHtml(current.topic.name)}</strong></span>`
+              : "<span>You haven't started a study plan yet</span>"}
+          </p>
+        </article>
+      </li>`;
   }
 
   function chipsHtml(folders) {
+    if (!folders.length) return "";
     const chip = (id, label) => `
-      <button type="button" class="chip folder-chip" data-folder="${id}"
-        aria-pressed="${state.folder === id}">${label}</button>`;
+      <button type="button" class="chip folder-chip" data-folder="${id}" aria-pressed="${state.folder === id}">${label}</button>`;
     return chip("all", "All") + folders.map((f) => chip(f.id, `${icon("folder")}${escapeHtml(f.name)}`)).join("");
   }
 
   function renderGrid() {
-    const folders = getFolders();
     const sets = visibleSets();
     const grid = main.querySelector(".sets-grid");
-    const status = main.querySelector(".sets-status");
-
-    if (sets.length === 0) {
+    const filtered = state.query.trim() || state.folder !== "all";
+    let html = createCardHtml() + sets.map(cardHtml).join("");
+    if (!sets.length && filtered) {
       const message = state.query.trim()
         ? `No sets match “${escapeHtml(state.query.trim())}”.`
         : "No sets in this folder yet. Use a set's ⋮ menu to move it here.";
-      grid.innerHTML = `<p class="sets-no-results muted">${message}</p>`;
-    } else {
-      grid.innerHTML = sets.map((set) => cardHtml(set, folders)).join("");
+      html += `<li class="sets-no-results muted">${message}</li>`;
     }
-    status.textContent = `${sets.length} ${sets.length === 1 ? "set" : "sets"} shown`;
+    grid.innerHTML = html;
+    main.querySelector(".sets-status").textContent = `${sets.length} ${sets.length === 1 ? "set" : "sets"} shown`;
   }
 
   function renderChips() {
     const folders = getFolders();
-    // If the active folder disappeared, fall back to All.
     if (state.folder !== "all" && !folders.some((f) => f.id === state.folder)) state.folder = "all";
     main.querySelector(".folder-chips").innerHTML = chipsHtml(folders);
   }
 
-  function render() {
-    if (getSets().length === 0) {
-      main.innerHTML = `
-        <div class="sets-header"><h1>My Study Sets</h1></div>
-        ${emptyStateHtml({ text: "You don't have any study sets yet.",
-          action: { label: `${icon("plus")}New study set`, attrs: 'data-action="create-set"' } })}`;
-      return;
-    }
+  function sortMenuHtml() {
+    return menuSelectHtml({ name: "sort", prefix: "Sort:", label: "Sort by", value: state.sort, options: SORTS });
+  }
 
+  function render() {
     main.innerHTML = `
-      <div class="sets-header">
-        <h1>My Study Sets</h1>
-        <button type="button" class="btn btn-primary" data-action="create-set">${icon("plus")}New study set</button>
-      </div>
-      <div class="sets-search">
-        ${icon("search")}
-        <label class="visually-hidden" for="sets-search">Search study sets</label>
-        <input class="input" id="sets-search" type="search" placeholder="Search study sets"
-          autocomplete="off" value="${escapeHtml(state.query)}">
+      <div class="sets-header"><h1>My Sets</h1></div>
+      <div class="sets-toolbar">
+        <div class="sets-search">
+          ${icon("search")}
+          <label class="visually-hidden" for="sets-search">Search study sets</label>
+          <input class="input" id="sets-search" type="search" placeholder="Search study sets..." autocomplete="off" value="${escapeHtml(state.query)}">
+        </div>
+        ${sortMenuHtml()}
+        <div class="sets-toolbar-actions">
+          <button type="button" class="btn btn-secondary" data-materials>${icon("file")}Materials</button>
+          <button type="button" class="btn btn-secondary" data-create-folder>${icon("folder")}Create folder</button>
+          <button type="button" class="btn btn-primary" data-action="create-set">${icon("plus")}Create study set</button>
+        </div>
       </div>
       <div class="folder-chips" role="group" aria-label="Filter by folder"></div>
       <p class="sets-status visually-hidden" aria-live="polite"></p>
-      <div class="sets-grid"></div>`;
+      <ul class="sets-grid"></ul>`;
     renderChips();
     renderGrid();
   }
@@ -161,37 +192,58 @@
   // Actions
   // ---------------------------------------------------------------------------
 
-  function renameSet(set) {
+  // A sheet with one text field. onSave(value) runs with the trimmed value.
+  function textFieldSheet({ title, label, value = "", placeholder = "", saveLabel, onSave }) {
     const modal = openModal({
-      title: "Rename study set",
+      title,
       body: `
-        <form class="rename-form">
+        <form>
           <div class="field">
-            <label class="field-label" for="rename-input">Name</label>
-            <input class="input" id="rename-input" name="name" type="text" maxlength="60"
-              autocomplete="off" value="${escapeHtml(set.name)}" required>
+            <label class="field-label" for="sheet-field">${label}</label>
+            <input class="input" id="sheet-field" name="value" type="text" maxlength="60" autocomplete="off"
+              value="${escapeHtml(value)}" placeholder="${escapeHtml(placeholder)}" required>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="submit" class="btn btn-primary"${value ? "" : " disabled"}>${saveLabel}</button>
           </div>
         </form>`,
     });
-
     const form = modal.dialog.querySelector("form");
-    const input = form.elements.name;
-    const save = form.querySelector("[type='submit']");
-    input.addEventListener("input", () => { save.disabled = input.value.trim() === ""; });
-    input.select();
-
+    const input = form.elements.value;
+    const submit = form.querySelector("[type='submit']");
+    input.addEventListener("input", () => { submit.disabled = input.value.trim() === ""; });
+    if (value) input.select(); else input.focus();
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const name = input.value.trim();
-      if (!name) return;
-      saveSet({ ...getSet(set.id), name });
+      const v = input.value.trim();
+      if (!v) return;
       modal.close();
-      renderGrid();
-      showToast(`Renamed to ${name}`);
+      onSave(v);
+    });
+  }
+
+  function renameSet(set) {
+    textFieldSheet({
+      title: "Rename study set", label: "Name", value: set.name, saveLabel: "Save",
+      onSave: (name) => {
+        saveSet({ ...getSet(set.id), name });
+        renderGrid();
+        showToast(`Renamed to ${name}`);
+      },
+    });
+  }
+
+  function createFolderSheet() {
+    textFieldSheet({
+      title: "Create folder", label: "Folder name", placeholder: "e.g. Semester 3", saveLabel: "Create folder",
+      onSave: (name) => {
+        const folder = createFolder(name);
+        state.folder = folder.id;
+        renderChips();
+        renderGrid();
+        showToast(`Folder “${folder.name}” created. Use a set's ⋮ menu to move sets in.`);
+      },
     });
   }
 
@@ -225,7 +277,6 @@
     const form = modal.dialog.querySelector("form");
     const newInput = form.elements.newFolder;
     const submit = form.querySelector("[type='submit']");
-
     const update = () => {
       const isNew = form.elements.folder.value === "__new";
       newInput.hidden = !isNew;
@@ -263,7 +314,7 @@
     });
     if (!confirmed) return;
     deleteSet(set.id);
-    render();
+    renderGrid();
     showToast(`Deleted ${set.name}`);
   }
 
@@ -277,22 +328,30 @@
     renderGrid();
   });
 
+  main.addEventListener("menuselect", (event) => {
+    if (event.detail.name !== "sort") return;
+    state.sort = event.detail.value;
+    event.target.closest(".menu-select").outerHTML = sortMenuHtml();
+    main.querySelector("[data-menu-select='sort'] .menu-select-btn").focus();
+    renderGrid();
+  });
+
   main.addEventListener("click", (event) => {
-    const chip = event.target.closest(".folder-chip");
+    const t = event.target;
+    if (t.closest("[data-materials]")) return openMaterials();
+    if (t.closest("[data-create-folder]")) return createFolderSheet();
+
+    const chip = t.closest(".folder-chip");
     if (chip) {
       state.folder = chip.dataset.folder;
       renderChips();
       renderGrid();
       return;
     }
+    const menuBtn = t.closest(".set-menu-btn");
+    if (menuBtn) return toggleMenu(menuBtn);
 
-    const menuBtn = event.target.closest(".set-menu-btn");
-    if (menuBtn) {
-      toggleMenu(menuBtn);
-      return;
-    }
-
-    const item = event.target.closest("[data-menu]");
+    const item = t.closest("[data-menu]");
     if (item) {
       const btn = item.closest(".set-menu-wrap").querySelector(".set-menu-btn");
       const set = getSet(btn.dataset.set);
@@ -305,18 +364,15 @@
     }
   });
 
-  // Close menus on outside click.
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".set-menu-wrap")) closeMenus();
   });
 
-  // Menu keyboard: Escape closes, arrows move between items.
   main.addEventListener("keydown", (event) => {
     const menu = event.target.closest(".set-menu");
     if (!menu) return;
     const items = [...menu.querySelectorAll("[role='menuitem']")];
     const index = items.indexOf(event.target);
-
     if (event.key === "Escape") {
       const btn = menu.previousElementSibling;
       closeMenus();

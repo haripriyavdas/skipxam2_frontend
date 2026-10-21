@@ -179,6 +179,9 @@
       if (state.answers[i] === q.answer) results[q.topicId].correct += 1;
     });
     state.changes = applyTopicResults(initialSet.id, results);
+    const correct = state.questions.filter((q, i) => state.answers[i] === q.answer).length;
+    logActivity(initialSet.id, "quiz", `Took a quiz in ${initialSet.name}, ${correct}/${state.questions.length}`);
+    recordQuizScore(Math.round((correct / state.questions.length) * 100));
     state.screen = "results";
     render();
     main.querySelector(".quiz-results h2").focus();
@@ -268,7 +271,7 @@
         <a class="pro-nudge" href="${toolUrl("test", s.id)}">
           <span class="tool-icon">${icon("test")}</span>
           <span class="pro-nudge-text">
-            <span class="pro-nudge-title">Try a timed Practice test ${free ? '<span class="badge">Pro</span>' : ""}</span>
+            <span class="pro-nudge-title">Try a timed Practice test ${free ? '<span class="badge badge-pro">Pro</span>' : ""}</span>
             <span class="muted">University-style paper with Part A, B and C, marked section by section.</span>
           </span>
         </a>
@@ -359,10 +362,18 @@
     }
   });
 
-  // Initial state: ?topic= starts straight away on that topic.
+  // Initial state: ?topic= starts straight away on that topic; ?unit= runs a
+  // 5-question knowledge check on the unit's topics.
+  const KNOWLEDGE_CHECK_QUESTIONS = 5;
+  const unitId = new URLSearchParams(location.search).get("unit");
   if (initialSet) {
     const s = set();
-    if (startTopic && s.quiz.some((q) => q.topicId === startTopic.id)) {
+    const unit = unitId && s.units.find((u) => u.id === unitId);
+    if (unit && s.quiz.some((q) => unit.topicIds.includes(q.topicId))) {
+      state.topics = new Set(unit.topicIds);
+      state.count = KNOWLEDGE_CHECK_QUESTIONS;
+      startFromSetup();
+    } else if (startTopic && s.quiz.some((q) => q.topicId === startTopic.id)) {
       state.topics = new Set([startTopic.id]);
       state.count = "all";
       startFromSetup();

@@ -112,8 +112,15 @@
     record(Number(section.dataset.index));
   }
 
+  const logged = new Set();
+
   function record(index) {
     recordActivity(set.id, "notes", index + 1, set.notes.length);
+    const section = set.notes[index];
+    if (index > 0 && section && !logged.has(section.topicId)) { // index 0 is the automatic first view
+      logged.add(section.topicId);
+      logActivity(set.id, "notes", `Read notes on ${topicName(set, section.topicId)}`);
+    }
   }
 
   function highlightToc(topicId) {

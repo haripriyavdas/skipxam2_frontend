@@ -47,21 +47,17 @@
     chevronLeft: svg('<path d="m15 18-6-6 6-6"/>'),
     chevronRight: svg('<path d="m9 18 6-6-6-6"/>'),
     bell: svg('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 21h4"/>'),
+    menu: svg('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+    panel: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>'),
+    swap: svg('<path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>'),
+    chevronDown: svg('<path d="m6 9 6 6 6-6"/>'),
+    share: svg('<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>'),
+    clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    filter: svg('<path d="M3 5h18l-7 8v6l-4-2v-4z"/>'),
+    settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+    copy: svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+    skip: svg('<path d="m5 5 9 7-9 7zM18 5v14"/>'),
     fire: svg('<path d="M12 22a7 7 0 0 0 7-7c0-4-3-6.5-4-10-1.5 1.5-2.5 3.5-2.5 5.5C11 9 10 8 9.5 6.5 7 9 5 11.5 5 15a7 7 0 0 0 7 7z"/>', 'fill="currentColor"'),
-  };
-
-  const NAV_ITEMS = [
-    { page: "dashboard", href: "dashboard.html", label: "Home", icon: "home" },
-    { page: "sets", href: "sets.html", label: "My Study Sets", short: "Study Sets", icon: "sets" },
-    { page: "calendar", href: "calendar.html", label: "Calendar", icon: "calendar" },
-    { page: "tutor", href: "tutor.html", label: "Tutor", icon: "tutor", pro: true },
-    { page: "profile", href: "profile.html", label: "Profile", icon: "profile" },
-  ];
-
-  // Pages that aren't in the nav but belong under one of its items.
-  const PAGE_PARENT = {
-    set: "sets", notes: "sets", plan: "sets", record: "sets",
-    "visual-memory": "sets", flashcards: "sets", quiz: "sets", "practice-test": "sets",
   };
 
   // Study tools: each has its own page, opened with ?set=<id>. `pro` tools are gated for free users.
@@ -173,36 +169,42 @@
 
   // Page-level empty state: one card style everywhere.
   // action: { label, href } for a link, or { label, attrs } for a button (e.g. data-action="create-set").
+  // Two blurred background glows (amber + ember). At most one orb layer per
+  // surface: Home, the pricing sheet and empty states. Its parent needs .has-orbs.
+  // The user's picture, or their initials when there is none.
+  function avatarInnerHtml(user) {
+    if (user.avatar) return `<img src="${user.avatar}" alt="">`;
+    const initials = user.name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
+    return escapeHtml(initials || "?");
+  }
+
+  // variant "diagonal": amber top-left, ember bottom-right.
+  function orbsHtml(variant) {
+    return `<div class="orb-layer${variant ? ` is-${variant}` : ""}" aria-hidden="true"><span class="orb orb-amber"></span><span class="orb orb-ember"></span></div>`;
+  }
+
   function emptyStateHtml({ title, text, action }) {
     let button = "";
     if (action && action.href) button = `<a class="btn btn-primary" href="${action.href}">${action.label}</a>`;
     else if (action) button = `<button type="button" class="btn btn-primary" ${action.attrs || ""}>${action.label}</button>`;
     return `
-      <div class="card empty-state">
+      <div class="card empty-state has-orbs">
+        ${orbsHtml()}
         ${title ? `<h2>${title}</h2>` : ""}
         <p class="muted">${text}</p>
         ${button}
       </div>`;
   }
 
-  // Shared header for tool pages: a back link to the set, then the tool title.
+  // Shared header for tool pages: the title row. (The breadcrumb links back to the set.)
   function toolHeaderHtml(set, title, actions = "") {
     return `
       <header class="tool-header">
-        <a class="back-link" href="set.html?set=${encodeURIComponent(set.id)}">
-          <span aria-hidden="true">←</span> ${set.emoji} ${escapeHtml(set.name)}
-        </a>
         <div class="tool-header-row">
           <h1>${title}</h1>
           ${actions}
         </div>
       </header>`;
-  }
-
-  function currentPage() {
-    const file = location.pathname.split("/").pop() || "dashboard.html";
-    const page = file.replace(/\.html$/, "");
-    return PAGE_PARENT[page] || page;
   }
 
   let toastTimer = null;
@@ -239,7 +241,7 @@
   function openModal({ title, body, className = "", onClose }) {
     const titleId = `modal-title-${++modalCount}`;
     const dialog = document.createElement("dialog");
-    dialog.className = `modal ${className}`.trim();
+    dialog.className = `modal glass ${className}`.trim();
     dialog.setAttribute("aria-labelledby", titleId);
     dialog.innerHTML = `
       <div class="modal-head">
@@ -310,62 +312,112 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Upgrade sheet. The one place every upgrade offer leads to.
-  // `feature` (optional) names what the user was trying to use.
+  // Pricing modal. The one place every upgrade offer leads to: full screen,
+  // three tiers, monthly/yearly toggle. `feature` (optional) names what the
+  // user was trying to use. Choosing a tier switches the mock plan.
   // ---------------------------------------------------------------------------
 
-  const PRO_PRICE = "₹99"; // per month (placeholder price)
   const FLASH_KEY = "skipxam.flash"; // toast to show after the page reloads
 
-  const PLAN_ROWS = [
-    { label: "Study sets", free: "3", pro: "Unlimited" },
-    { label: "Smart notes, flashcards &amp; quizzes", free: true, pro: true },
-    { label: "Study plan &amp; reminders", free: true, pro: true },
-    { label: "Practice tests", free: false, pro: true },
-    { label: "AI Tutor", free: false, pro: true },
-    { label: "Visual memory", free: false, pro: true },
-    { label: "Record lectures", free: false, pro: true },
+  // Placeholder prices in rupees. Yearly is about two months free.
+  const PLANS = {
+    free: { name: "Free", monthly: 0, yearly: 0, line: "Everything you need to start studying smarter." },
+    pro: { name: "Pro", monthly: 99, yearly: 999, line: "The full toolkit for exam season." },
+    max: { name: "Max", monthly: 249, yearly: 2499, line: "For heavy users who record and revise every day." },
+  };
+  const PLAN_ORDER = ["free", "pro", "max"];
+
+  // Each row: label per plan, or false where the plan doesn't include it.
+  const PLAN_FEATURES = [
+    { free: "Smart notes, flashcards &amp; quizzes", pro: true, max: true },
+    { free: "Study plan, calendar &amp; reminders", pro: true, max: true },
+    { free: "Up to 3 study sets", pro: "Unlimited study sets", max: "Unlimited study sets" },
+    { free: false, pro: "Practice tests", max: true },
+    { free: false, pro: "Visual memory", max: true },
+    { free: false, pro: "AI Tutor", max: true },
+    { free: false, pro: "Record lectures (5 hrs a month)", max: "Record lectures (30 hrs a month)" },
+    { free: false, pro: false, max: "Priority tutor responses" },
+    { free: false, pro: false, max: "Explainer videos (when they launch)" },
   ];
 
-  function planCell(value) {
-    if (value === true) return `<span class="plan-yes" role="img" aria-label="Included">${icon("check")}</span>`;
-    if (value === false) return '<span class="plan-no" role="img" aria-label="Not included">–</span>';
-    return escapeHtml(value);
+  const rupees = (n) => `₹${n.toLocaleString("en-IN")}`;
+
+  function planLabel(plan) {
+    return PLANS[plan] ? PLANS[plan].name : "Free";
+  }
+
+  function tierFeaturesHtml(plan) {
+    return PLAN_FEATURES.map((row) => {
+      // A `true` reuses the label from the cheapest plan that names it.
+      const own = row[plan];
+      const label = own === true ? PLAN_ORDER.map((p) => row[p]).find((v) => typeof v === "string") : own;
+      if (own) return `<li class="tier-feature">${icon("check")}<span>${label}</span></li>`;
+      const missing = PLAN_ORDER.map((p) => row[p]).find((v) => typeof v === "string");
+      return `<li class="tier-feature is-missing">${icon("close")}<span>${missing}<span class="visually-hidden"> (not included)</span></span></li>`;
+    }).join("");
+  }
+
+  function tierHtml(plan, billing, current) {
+    const p = PLANS[plan];
+    const featured = plan === "pro";
+    const isCurrent = plan === current;
+    const yearly = billing === "yearly";
+    const price = plan === "free" ? rupees(0) : rupees(yearly ? p.yearly : p.monthly);
+    const per = plan === "free" ? "forever" : yearly ? "per year" : "per month";
+    const saving = yearly && plan !== "free" ? `Save ${rupees(p.monthly * 12 - p.yearly)} a year` : "";
+    let button;
+    if (isCurrent) button = '<button type="button" class="btn btn-secondary btn-block" disabled>Current plan</button>';
+    else if (plan === "free") button = '<button type="button" class="btn btn-secondary btn-block" data-choose-plan="free">Switch to Free</button>';
+    else if (plan === "pro") button = '<button type="button" class="btn btn-primary btn-block" data-choose-plan="pro" autofocus>Upgrade to Pro</button>';
+    else button = '<button type="button" class="btn btn-secondary btn-block" data-choose-plan="max">Go Max</button>';
+
+    return `
+      <article class="tier tier-${plan}${featured ? " is-featured gradient-border" : ""}" aria-labelledby="tier-${plan}-name">
+        ${featured ? '<span class="tier-badge">Most popular</span>' : ""}
+        <h3 class="tier-name" id="tier-${plan}-name">${p.name}</h3>
+        <p class="tier-price"><span class="tier-amount">${price}</span> <span class="muted">${per}</span></p>
+        <p class="tier-saving">${saving || "&nbsp;"}</p>
+        <p class="tier-line muted">${p.line}</p>
+        ${button}
+        <ul class="tier-features" aria-label="What's in ${p.name}">${tierFeaturesHtml(plan)}</ul>
+      </article>`;
   }
 
   function openUpgrade(feature) {
-    if (getUser().plan === "pro") {
-      showToast("You're already on Pro.");
-      return;
-    }
-
-    const rows = PLAN_ROWS.map((row) => `
-      <tr>
-        <th scope="row">${row.label}</th>
-        <td>${planCell(row.free)}</td>
-        <td>${planCell(row.pro)}</td>
-      </tr>`).join("");
+    const user = getUser();
+    let billing = user.billing || "monthly";
 
     const modal = openModal({
-      title: "Upgrade to Pro",
-      className: "upgrade-sheet",
+      title: "Choose your plan",
+      className: "pricing-modal",
       body: `
-        <p class="upgrade-lead">${feature
-          ? `<strong>${escapeHtml(feature)}</strong> is part of SkipXam Pro.`
-          : "Get more out of every study set."}</p>
-        <table class="plan-table">
-          <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Free</th><th scope="col">Pro</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p class="price"><span class="price-amount">${PRO_PRICE}</span> / month</p>
-        <p class="price-note">Cancel anytime</p>
-        <button type="button" class="btn btn-primary btn-block" data-go-pro autofocus>Upgrade to Pro</button>`,
+        ${feature ? `<p class="pricing-lead"><strong>${escapeHtml(feature)}</strong> is part of SkipXam Pro.</p>` : '<p class="pricing-lead muted">Study smarter for less than a samosa a day.</p>'}
+        <fieldset class="segmented billing-toggle">
+          <legend class="visually-hidden">Billing period</legend>
+          <label><input type="radio" name="billing" value="monthly"${billing === "monthly" ? " checked" : ""}><span>Monthly</span></label>
+          <label><input type="radio" name="billing" value="yearly"${billing === "yearly" ? " checked" : ""}><span>Yearly <em class="billing-save">2 months free</em></span></label>
+        </fieldset>
+        <div class="tiers has-orbs">
+          <div class="orb-layer tiers-orb" aria-hidden="true"><span class="orb orb-amber"></span></div>
+          <div class="tiers-row">${PLAN_ORDER.map((p) => tierHtml(p, billing, user.plan)).join("")}</div>
+        </div>
+        <p class="pricing-foot muted">Cancel anytime. No hidden limits.</p>`,
     });
 
-    modal.dialog.querySelector("[data-go-pro]").addEventListener("click", () => {
-      setPlan("pro");
-      try { sessionStorage.setItem(FLASH_KEY, "You're on Pro now. Everything is unlocked."); } catch (err) { /* toast is optional */ }
-      location.reload();
+    const row = modal.dialog.querySelector(".tiers-row");
+    modal.dialog.addEventListener("change", (event) => {
+      if (event.target.name !== "billing") return;
+      billing = event.target.value;
+      row.innerHTML = PLAN_ORDER.map((p) => tierHtml(p, billing, user.plan)).join("");
+    });
+    modal.dialog.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-choose-plan]");
+      if (!button) return;
+      const plan = button.dataset.choosePlan;
+      setPlan(plan, billing);
+      queueToast(plan === "free" ? "You're on the Free plan now." : `You're on ${planLabel(plan)} now. Everything is unlocked.`);
+      modal.close();
+      setTimeout(() => location.reload(), 200);
     });
   }
 
@@ -380,7 +432,7 @@
   const GATE_MIN_HEIGHT = 220; // room for the overlay's lock, title and button
 
   function proGate(element, featureName) {
-    if (!element || getUser().plan === "pro" || element.classList.contains("pro-gate")) return;
+    if (!element || getUser().plan !== "free" || element.classList.contains("pro-gate")) return;
 
     const children = [...element.children];
     const first = children.length > 1 ? children[0] : null; // a lone child is blurred too
@@ -529,92 +581,568 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Shell
+  // Shared sheets: search, materials, share
   // ---------------------------------------------------------------------------
 
-  const logoHtml = '<a href="dashboard.html" class="app-logo">Skip<span>Xam</span></a>';
+  const FILE_KINDS = {
+    pdf: { label: "PDF", icon: "file" },
+    image: { label: "IMG", icon: "image" },
+    pptx: { label: "PPT", icon: "slides" },
+    docx: { label: "DOC", icon: "notes" },
+    audio: { label: "M4A", icon: "mic" },
+  };
 
-  function sidebarHtml(active, user) {
-    const links = NAV_ITEMS.map((item) => `
-      <li>
-        <a href="${item.href}" class="sidebar-link"${item.page === active ? ' aria-current="page"' : ""}>
-          ${ICONS[item.icon]}
-          <span>${item.label}</span>
-          ${item.pro ? '<span class="badge">Pro</span>' : ""}
-        </a>
-      </li>`).join("");
-
-    const footer = user.plan === "pro"
-      ? `<div class="sidebar-plan">
-           <span class="badge">Pro</span>
-           <span>${escapeHtml(user.name)} · Pro plan</span>
-         </div>`
-      : `<div class="upgrade-card">
-           <p class="upgrade-card-title">Upgrade to Pro</p>
-           <p class="upgrade-card-text">Unlock the AI Tutor and unlimited study sets.</p>
-           <button type="button" class="btn btn-secondary" data-action="upgrade">Upgrade</button>
-         </div>`;
-
-    return `
-      <aside class="app-sidebar">
-        ${logoHtml}
-        <button type="button" class="btn btn-primary sidebar-create" data-action="create-set">
-          ${ICONS.plus}<span>Create study set</span>
-        </button>
-        <nav aria-label="Main">
-          <ul class="sidebar-nav">${links}</ul>
-        </nav>
-        ${footer}
-      </aside>`;
+  // Small coloured file badge: icon + type, e.g. PDF.
+  function fileBadgeHtml(type) {
+    const kind = FILE_KINDS[type] || { label: "FILE", icon: "file" };
+    return `<span class="file-badge is-${type || "file"}" aria-hidden="true">${icon(kind.icon)}</span>`;
   }
 
-  function topbarHtml(user) {
-    const days = user.streak === 1 ? "day" : "days";
+  function fileKindLabel(type) {
+    return (FILE_KINDS[type] || { label: "File" }).label;
+  }
+
+  // All uploaded files across sets, newest first: [{ file, set }]
+  function allMaterials(setId) {
+    return getSets()
+      .filter((s) => !setId || s.id === setId)
+      .flatMap((s) => s.files.map((file) => ({ file, set: s })))
+      .sort((a, b) => b.file.date.localeCompare(a.file.date));
+  }
+
+  function openMaterials(setId) {
+    const sets = getSets();
+    const listHtml = (filter) => {
+      const items = allMaterials(filter);
+      if (!items.length) return '<p class="muted">No materials yet.</p>';
+      return `<ul class="materials-list">${items.map(({ file, set }) => `
+        <li class="material-row">
+          ${fileBadgeHtml(file.type)}
+          <span class="material-text">
+            <span class="material-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+            <span class="muted">${set.emoji} ${escapeHtml(set.name)} · ${fileKindLabel(file.type)} · ${formatDate(file.date)}</span>
+          </span>
+          <a class="btn btn-ghost btn-sm" href="set.html?set=${encodeURIComponent(set.id)}">Open set</a>
+        </li>`).join("")}</ul>`;
+    };
+    const modal = openModal({
+      title: "Materials",
+      className: "materials-sheet",
+      body: `
+        <label class="visually-hidden" for="materials-filter">Show materials from</label>
+        <select class="input materials-filter" id="materials-filter">
+          <option value="">All study sets</option>
+          ${sets.map((s) => `<option value="${s.id}"${s.id === setId ? " selected" : ""}>${escapeHtml(s.name)}</option>`).join("")}
+        </select>
+        <div class="materials-results">${listHtml(setId)}</div>`,
+    });
+    const select = modal.dialog.querySelector("#materials-filter");
+    select.addEventListener("change", () => {
+      modal.dialog.querySelector(".materials-results").innerHTML = listHtml(select.value);
+    });
+  }
+
+  function openShare() {
+    const url = location.href;
+    const modal = openModal({
+      title: "Share",
+      body: `
+        <p class="muted share-lead">Anyone with the link can view this page. (Demo: sharing isn't live yet.)</p>
+        <div class="share-row">
+          <label class="visually-hidden" for="share-url">Link</label>
+          <input class="input" id="share-url" type="text" readonly value="${escapeHtml(url)}">
+          <button type="button" class="btn btn-primary" data-copy>${icon("copy")}Copy</button>
+        </div>`,
+    });
+    const input = modal.dialog.querySelector("#share-url");
+    modal.dialog.querySelector("[data-copy]").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        input.select(); // clipboard API blocked (e.g. file://): leave the link selected to copy by hand
+        document.execCommand && document.execCommand("copy");
+      }
+      showToast("Link copied");
+    });
+    input.addEventListener("focus", () => input.select());
+  }
+
+  function openSearch() {
+    const modal = openModal({
+      title: "Search",
+      className: "search-sheet",
+      body: `
+        <label class="visually-hidden" for="global-search">Search sets, topics and materials</label>
+        <input class="input" id="global-search" type="search" placeholder="Search sets, topics and materials…" autocomplete="off">
+        <div class="search-results" aria-live="polite"></div>`,
+    });
+    const input = modal.dialog.querySelector("#global-search");
+    const results = modal.dialog.querySelector(".search-results");
+
+    const render = () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        results.innerHTML = '<p class="muted">Type to search your study sets.</p>';
+        return;
+      }
+      const sets = getSets();
+      const groups = [
+        { title: "Study sets", items: sets.filter((s) => s.name.toLowerCase().includes(q))
+          .map((s) => ({ href: `set.html?set=${encodeURIComponent(s.id)}`, label: `${s.emoji} ${escapeHtml(s.name)}`, meta: escapeHtml(s.subject || "") })) },
+        { title: "Topics", items: sets.flatMap((s) => s.topics.filter((t) => t.name.toLowerCase().includes(q))
+          .map((t) => ({ href: `set.html?set=${encodeURIComponent(s.id)}&topic=${encodeURIComponent(t.id)}`, label: escapeHtml(t.name), meta: escapeHtml(s.name) }))) },
+        { title: "Materials", items: allMaterials().filter(({ file }) => file.name.toLowerCase().includes(q))
+          .map(({ file, set }) => ({ href: `set.html?set=${encodeURIComponent(set.id)}`, label: escapeHtml(file.name), meta: escapeHtml(set.name) })) },
+      ].filter((g) => g.items.length);
+
+      results.innerHTML = groups.length ? groups.map((g) => `
+        <section class="search-group">
+          <h3>${g.title}</h3>
+          <ul>${g.items.slice(0, 6).map((it) => `
+            <li><a class="search-hit" href="${it.href}"><span class="search-hit-label">${it.label}</span><span class="muted">${it.meta}</span></a></li>`).join("")}</ul>
+        </section>`).join("") : `<p class="muted">No results for “${escapeHtml(input.value.trim())}”.</p>`;
+    };
+    input.addEventListener("input", render);
+    render();
+    input.focus();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Menu select: a dropdown button whose options can carry a hint (shown as a
+  // tooltip on hover/focus, inline on touch screens). Fires a bubbling
+  // "menuselect" event with { name, value } when an option is picked.
+  //
+  //   menuSelectHtml({ name: "mode", prefix: "Mode", value: "standard",
+  //     options: [{ value: "cram", label: "Cram", hint: "…", icon: "sparkle" }] })
+  // ---------------------------------------------------------------------------
+
+  let menuSelectCount = 0;
+
+  function menuSelectHtml({ name, prefix = "", value, options, label }) {
+    const id = `menusel-${++menuSelectCount}`;
+    const current = options.find((o) => o.value === value) || options[0];
     return `
-      <header class="app-topbar">
-        ${logoHtml}
-        <span class="streak" aria-label="${user.streak} ${days} streak">
-          ${ICONS.fire}<span>${user.streak}</span>
-        </span>
+      <div class="menu-select" data-menu-select="${name}">
+        <button type="button" class="menu-select-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="${id}"
+          ${label ? `aria-label="${escapeHtml(label)}: ${escapeHtml(current.label)}"` : ""}>
+          ${prefix ? `<span class="menu-select-prefix">${prefix}</span>` : ""}
+          ${current.icon ? icon(current.icon) : ""}
+          <span class="menu-select-value">${escapeHtml(current.label)}</span>
+          ${icon("chevronDown")}
+        </button>
+        <ul class="menu-select-list glass" id="${id}" role="listbox" hidden>
+          ${options.map((o) => `
+            <li role="option" tabindex="-1" data-value="${o.value}" aria-selected="${o.value === current.value}">
+              ${o.icon ? icon(o.icon) : ""}<span class="menu-option-label">${escapeHtml(o.label)}</span>
+              ${o.value === current.value ? `<span class="menu-option-check">${icon("check")}</span>` : ""}
+              ${o.hint ? `<span class="menu-hint" role="tooltip">${escapeHtml(o.hint)}</span>` : ""}
+            </li>`).join("")}
+        </ul>
+      </div>`;
+  }
+
+  function closeMenuSelects(except) {
+    document.querySelectorAll(".menu-select-btn[aria-expanded='true']").forEach((btn) => {
+      if (btn === except) return;
+      btn.setAttribute("aria-expanded", "false");
+      btn.nextElementSibling.hidden = true;
+    });
+  }
+
+  function pickMenuOption(option) {
+    const wrap = option.closest("[data-menu-select]");
+    const btn = wrap.querySelector(".menu-select-btn");
+    closeMenuSelects();
+    btn.focus();
+    wrap.dispatchEvent(new CustomEvent("menuselect", { bubbles: true, detail: { name: wrap.dataset.menuSelect, value: option.dataset.value } }));
+  }
+
+  function bindMenuSelects() {
+    document.addEventListener("click", (event) => {
+      const btn = event.target.closest(".menu-select-btn");
+      if (btn) {
+        const open = btn.getAttribute("aria-expanded") === "true";
+        closeMenuSelects(btn);
+        btn.setAttribute("aria-expanded", String(!open));
+        btn.nextElementSibling.hidden = open;
+        if (!open) (btn.nextElementSibling.querySelector("[aria-selected='true']") || btn.nextElementSibling.firstElementChild).focus();
+        return;
+      }
+      const option = event.target.closest(".menu-select-list [role='option']");
+      if (option) return pickMenuOption(option);
+      if (!event.target.closest(".menu-select")) closeMenuSelects();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const option = event.target.closest && event.target.closest(".menu-select-list [role='option']");
+      if (!option) return;
+      const items = [...option.parentElement.children];
+      const i = items.indexOf(option);
+      if (event.key === "ArrowDown") { event.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if (event.key === "ArrowUp") { event.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+      else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); pickMenuOption(option); }
+      else if (event.key === "Escape" || event.key === "Tab") {
+        const btn = option.closest(".menu-select").querySelector(".menu-select-btn");
+        closeMenuSelects();
+        if (event.key === "Escape") btn.focus();
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shell: sidebar (collapsible; a drawer on mobile), top bar, bottom tab bar
+  // ---------------------------------------------------------------------------
+
+  const GLOBAL_LINKS = [
+    { page: "dashboard", href: "dashboard.html", label: "Home", icon: "home" },
+    { page: "sets", href: "sets.html", label: "My Sets", icon: "sets" },
+    { page: "calendar", href: "calendar.html", label: "Calendar", icon: "calendar" },
+  ];
+
+  // Links for the active set. `tool` keys into TOOLS; `page` is the file name.
+  const SET_LINKS = [
+    { tool: "plan", page: "plan", label: "Study Plan" },
+    { tool: "tutor", page: "tutor", label: "Tutor" },
+    { tool: "record", page: "record", label: "Record Lecture" },
+  ];
+  const PRACTICE_LINKS = [
+    { tool: "notes", page: "notes", label: "Notes" },
+    { tool: "flashcards", page: "flashcards", label: "Flashcards" },
+    { tool: "quiz", page: "quiz", label: "Quizzes" },
+    { tool: "test", page: "practice-test", label: "Practice Tests" },
+    { tool: "visual", page: "visual-memory", label: "Visual Memory" },
+  ];
+
+  const PAGE_TITLES = {
+    dashboard: "Home", sets: "My Sets", calendar: "Calendar", profile: "Profile", tutor: "Tutor",
+    plan: "Study Plan", record: "Record Lecture", notes: "Notes", flashcards: "Flashcards",
+    quiz: "Quizzes", "practice-test": "Practice Tests", "visual-memory": "Visual Memory",
+  };
+
+  const COLLAPSE_KEY = "skipxam.sidebarCollapsed";
+  const PRACTICE_KEY = "skipxam.practiceOpen";
+  const MATERIALS_IN_SIDEBAR = 5;
+
+  // Per-viewer UI preferences; storage may be unavailable, so never rely on it.
+  function readPref(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v === null ? fallback : v === "1";
+    } catch (err) { return fallback; }
+  }
+
+  function writePref(key, value) {
+    try { localStorage.setItem(key, value ? "1" : "0"); } catch (err) { /* ignore */ }
+  }
+
+  function pageName() {
+    return (location.pathname.split("/").pop() || "dashboard.html").replace(/\.html$/, "");
+  }
+
+  // The set this page belongs to, or null on Home, My Sets, Calendar, Profile and the tutor picker.
+  function activeSet() {
+    const page = pageName();
+    if (["dashboard", "sets", "calendar", "profile"].includes(page)) return null;
+    const id = new URLSearchParams(location.search).get("set");
+    return id ? getSet(id) : null;
+  }
+
+  function formatMinutes(min) {
+    if (min < 60) return `${min}m`;
+    return `${Math.floor(min / 60)}h ${min % 60}m`;
+  }
+
+  function navLink(href, iconName, label, current, extra = "") {
+    return `
+      <li><a class="nav-link" href="${href}"${current ? ' aria-current="page"' : ""} title="${label}">
+        ${icon(iconName)}<span class="nav-label">${label}</span>${extra}
+      </a></li>`;
+  }
+
+  function setSectionHtml(set, page, free) {
+    const lock = (tool) => (TOOLS[tool].pro && free ? `<span class="nav-pro">${icon("lock")}<span class="visually-hidden">Pro</span></span>` : "");
+    const link = (item) => navLink(toolUrl(item.tool, set.id), TOOLS[item.tool].icon, item.label, page === item.page, lock(item.tool));
+    const practiceOpen = readPref(PRACTICE_KEY, true) || PRACTICE_LINKS.some((l) => l.page === page);
+    const files = [...set.files].reverse();
+
+    return `
+      <div class="sidebar-divider" role="separator"></div>
+      <div class="set-switcher">
+        <button type="button" class="set-switcher-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="set-switcher-list"
+          title="${escapeHtml(set.name)}" style="--set-colour: ${set.colour}">
+          <span class="set-switcher-icon" aria-hidden="true">${set.emoji}</span>
+          <span class="set-switcher-name nav-label">${escapeHtml(set.name)}</span>
+          <span class="nav-label set-switcher-swap">${icon("swap")}</span>
+          <span class="visually-hidden">Switch study set</span>
+        </button>
+        <ul class="set-switcher-list glass" id="set-switcher-list" role="listbox" aria-label="Study sets" hidden>
+          ${getSets().map((s) => `
+            <li role="option" tabindex="-1" data-switch-set="${s.id}" aria-selected="${s.id === set.id}" style="--set-colour: ${s.colour}">
+              <span class="set-switcher-icon small" aria-hidden="true">${s.emoji}</span>${escapeHtml(s.name)}
+              ${s.id === set.id ? `<span class="menu-option-check">${icon("check")}</span>` : ""}
+            </li>`).join("")}
+        </ul>
+      </div>
+
+      <nav aria-label="${escapeHtml(set.name)}">
+        <ul class="nav-list">
+          ${SET_LINKS.map(link).join("")}
+          <li class="nav-group">
+            <button type="button" class="nav-group-btn" aria-expanded="${practiceOpen}" aria-controls="practice-links">
+              ${icon("cards")}<span class="nav-label">Practice &amp; Activities</span>
+              <span class="nav-label nav-group-chevron">${icon("chevronDown")}</span>
+            </button>
+            <ul class="nav-sublist" id="practice-links"${practiceOpen ? "" : " hidden"}>
+              ${PRACTICE_LINKS.map(link).join("")}
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <a class="btn btn-primary sidebar-upload" href="set.html?set=${encodeURIComponent(set.id)}&upload=1" title="Upload">
+        ${icon("plus")}<span class="nav-label">Upload</span>
+      </a>
+
+      <section class="sidebar-materials" aria-labelledby="materials-title">
+        <div class="sidebar-materials-head">
+          <h2 id="materials-title">Materials</h2>
+          ${files.length ? '<button type="button" class="link-btn" data-view-materials>View all</button>' : ""}
+        </div>
+        ${files.length ? `
+          <ul class="sidebar-files">
+            ${files.slice(0, MATERIALS_IN_SIDEBAR).map((f) => `
+              <li class="sidebar-file" title="${escapeHtml(f.name)}">${fileBadgeHtml(f.type)}<span class="sidebar-file-name">${escapeHtml(f.name)}</span></li>`).join("")}
+          </ul>` : '<p class="sidebar-empty">No materials yet.</p>'}
+      </section>`;
+  }
+
+  function sidebarHtml(page, set, user) {
+    return `
+      <aside class="app-sidebar" id="app-sidebar" aria-label="Sidebar">
+        <div class="sidebar-head">
+          <a href="dashboard.html" class="app-logo" aria-label="SkipXam home"><span class="logo-full">Skip<span>Xam</span></span><span class="logo-mini">S<span>X</span></span></a>
+          <div class="sidebar-head-actions">
+            <button type="button" class="icon-btn" data-open-search aria-label="Search">${icon("search")}</button>
+            <button type="button" class="icon-btn sidebar-collapse" data-collapse aria-label="Collapse sidebar" aria-expanded="true" aria-controls="app-sidebar">${icon("panel")}</button>
+            <button type="button" class="icon-btn sidebar-close" data-close-drawer aria-label="Close menu">${icon("close")}</button>
+          </div>
+        </div>
+        <nav aria-label="Main">
+          <ul class="nav-list">
+            ${GLOBAL_LINKS.map((l) => navLink(l.href, l.icon, l.label, l.page === page || (l.page === "sets" && page === "set"))).join("")}
+          </ul>
+        </nav>
+        ${set ? setSectionHtml(set, page, user.plan === "free") : ""}
+        <div class="sidebar-mobile-actions">
+          ${user.plan === "free" ? `<button type="button" class="btn btn-primary btn-block" data-action="upgrade">${icon("sparkle")}Upgrade</button>` : ""}
+          <button type="button" class="btn btn-secondary btn-block" data-open-share>${icon("share")}Share</button>
+        </div>
+      </aside>
+      <div class="drawer-backdrop" data-close-drawer hidden></div>`;
+  }
+
+  function breadcrumbHtml(page, set) {
+    const crumbs = [];
+    if (set) {
+      crumbs.push({ href: "sets.html", label: "My Sets" });
+      crumbs.push({ href: page === "set" ? null : `set.html?set=${encodeURIComponent(set.id)}`, label: `${set.emoji} ${escapeHtml(set.name)}` });
+      if (page !== "set") crumbs.push({ label: PAGE_TITLES[page] || page });
+    } else if (page === "set") {
+      crumbs.push({ href: "sets.html", label: "My Sets" });
+    } else {
+      crumbs.push({ label: PAGE_TITLES[page] || "SkipXam" });
+    }
+    return `
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          ${crumbs.map((c, i) => {
+            const last = i === crumbs.length - 1;
+            return `<li>${c.href && !last ? `<a href="${c.href}">${c.label}</a>` : `<span${last ? ' aria-current="page"' : ""}>${c.label}</span>`}</li>`;
+          }).join("")}
+        </ol>
+      </nav>`;
+  }
+
+  function topbarHtml(page, set, user) {
+    const minutes = getStudiedToday();
+    return `
+      <header class="app-topbar glass">
+        <button type="button" class="icon-btn topbar-menu" data-open-drawer aria-label="Open menu" aria-controls="app-sidebar" aria-expanded="false">${icon("menu")}</button>
+        <a href="dashboard.html" class="app-logo topbar-logo">Skip<span>Xam</span></a>
+        ${breadcrumbHtml(page, set)}
+        <div class="topbar-actions">
+          ${user.plan === "free" ? `<button type="button" class="upgrade-pill" data-action="upgrade">${icon("sparkle")}Upgrade</button>` : ""}
+          <button type="button" class="btn btn-secondary btn-sm topbar-share" data-open-share>${icon("share")}Share</button>
+          <span class="study-timer" title="Time studied today" aria-label="Studied today: ${minutes} minutes">
+            ${icon("clock")}<span data-study-minutes>${formatMinutes(minutes)}</span>
+          </span>
+          <a class="avatar" href="profile.html" aria-label="Profile: ${escapeHtml(user.name)}">${avatarInnerHtml(user)}</a>
+        </div>
       </header>`;
   }
 
-  function tabbarHtml(active) {
-    const tab = (page) => {
-      const item = NAV_ITEMS.find((i) => i.page === page);
-      return `
-        <a href="${item.href}" class="tab"${page === active ? ' aria-current="page"' : ""}>
-          ${ICONS[item.icon]}
-          <span>${item.short || item.label}</span>
-        </a>`;
-    };
-
+  function tabbarHtml(page) {
+    const tab = (href, iconName, label, current) => `
+      <a href="${href}" class="tab"${current ? ' aria-current="page"' : ""}>${icon(iconName)}<span>${label}</span></a>`;
+    const inSet = !["dashboard", "calendar", "profile"].includes(page);
     return `
-      <nav class="app-tabbar" aria-label="Main">
-        ${tab("dashboard")}
-        ${tab("sets")}
-        <button type="button" class="tab-create" data-action="create-set" aria-label="Create study set">
-          ${ICONS.plus}
-        </button>
-        ${tab("calendar")}
-        ${tab("profile")}
+      <nav class="app-tabbar glass" aria-label="Main">
+        ${tab("dashboard.html", "home", "Home", page === "dashboard")}
+        ${tab("sets.html", "sets", "My Sets", inSet)}
+        <button type="button" class="tab-create" data-action="create-set" aria-label="Create study set">${icon("plus")}</button>
+        ${tab("calendar.html", "calendar", "Calendar", page === "calendar")}
+        ${tab("profile.html", "profile", "Profile", page === "profile")}
       </nav>`;
+  }
+
+  // ---------- Behaviour ----------
+
+  const mobileQuery = window.matchMedia("(max-width: 899px)");
+
+  function setCollapsed(collapsed) {
+    document.body.classList.toggle("sidebar-collapsed", collapsed);
+    const btn = document.querySelector("[data-collapse]");
+    btn.setAttribute("aria-expanded", String(!collapsed));
+    btn.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    writePref(COLLAPSE_KEY, collapsed);
+  }
+
+  // Mobile drawer: everything behind it is inert while it's open.
+  function setDrawer(open) {
+    const sidebar = document.querySelector(".app-sidebar");
+    const backdrop = document.querySelector(".drawer-backdrop");
+    const menuBtn = document.querySelector("[data-open-drawer]");
+    document.body.classList.toggle("drawer-open", open);
+    backdrop.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", String(open));
+    document.querySelectorAll("main, .app-topbar, .app-tabbar, .dev-toggle").forEach((el) => { el.inert = open; });
+    if (open) sidebar.querySelector("a, button").focus();
+    else menuBtn.focus();
+  }
+
+  function toggleSetSwitcher(force) {
+    const btn = document.querySelector(".set-switcher-btn");
+    if (!btn) return;
+    const list = document.querySelector(".set-switcher-list");
+    const open = force !== undefined ? force : btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", String(open));
+    list.hidden = !open;
+    if (open) (list.querySelector("[aria-selected='true']") || list.firstElementChild).focus();
+  }
+
+  // Switching sets keeps you on the same tool, for the new set.
+  function switchToSet(setId) {
+    const params = new URLSearchParams(location.search);
+    params.set("set", setId);
+    params.delete("topic");
+    params.delete("unit");
+    location.href = `${location.pathname.split("/").pop()}?${params}`;
+  }
+
+  function bindShell() {
+    document.body.addEventListener("click", (event) => {
+      const t = event.target;
+      const action = t.closest("[data-action]");
+      if (action) {
+        if (action.dataset.action === "create-set") openCreateSet();
+        if (action.dataset.action === "upgrade") openUpgrade(action.dataset.feature);
+        return;
+      }
+      if (t.closest("[data-collapse]")) return setCollapsed(!document.body.classList.contains("sidebar-collapsed"));
+      if (t.closest("[data-open-drawer]")) return setDrawer(true);
+      if (t.closest("[data-close-drawer]")) return setDrawer(false);
+      if (t.closest("[data-open-search]")) return openSearch();
+      if (t.closest("[data-open-share]")) return openShare();
+      if (t.closest("[data-view-materials]")) return openMaterials(activeSet() ? activeSet().id : undefined);
+      if (t.closest(".set-switcher-btn")) return toggleSetSwitcher();
+      const switchItem = t.closest("[data-switch-set]");
+      if (switchItem) return switchToSet(switchItem.dataset.switchSet);
+      const group = t.closest(".nav-group-btn");
+      if (group) {
+        const open = group.getAttribute("aria-expanded") !== "true";
+        group.setAttribute("aria-expanded", String(open));
+        document.getElementById("practice-links").hidden = !open;
+        writePref(PRACTICE_KEY, open);
+        return;
+      }
+      if (!t.closest(".set-switcher")) toggleSetSwitcher(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && document.body.classList.contains("drawer-open") && !document.querySelector("dialog[open]")) {
+        setDrawer(false);
+        return;
+      }
+      const item = event.target.closest && event.target.closest("[data-switch-set]");
+      if (!item) return;
+      const items = [...item.parentElement.children];
+      const i = items.indexOf(item);
+      if (event.key === "ArrowDown") { event.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if (event.key === "ArrowUp") { event.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+      else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); switchToSet(item.dataset.switchSet); }
+      else if (event.key === "Escape") { toggleSetSwitcher(false); document.querySelector(".set-switcher-btn").focus(); }
+    });
+
+    // Leaving mobile width with the drawer open: close it.
+    mobileQuery.addEventListener("change", () => {
+      if (!mobileQuery.matches && document.body.classList.contains("drawer-open")) setDrawer(false);
+    });
+  }
+
+  // Counts a minute of study for every minute an app page is open and visible.
+  function startStudyTimer() {
+    setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const minutes = addStudyMinute();
+      const el = document.querySelector("[data-study-minutes]");
+      if (el) el.textContent = formatMinutes(minutes);
+      const wrap = document.querySelector(".study-timer");
+      if (wrap) wrap.setAttribute("aria-label", `Studied today: ${minutes} minutes`);
+    }, 60000);
   }
 
   function renderShell() {
     const user = getUser();
-    const active = currentPage();
+    const page = pageName();
+    const set = activeSet();
 
     document.body.classList.add("has-app-shell");
-    document.body.insertAdjacentHTML("afterbegin",
-      sidebarHtml(active, user) + topbarHtml(user) + tabbarHtml(active));
+    if (set) document.body.classList.add("in-set");
+    document.body.insertAdjacentHTML("afterbegin", sidebarHtml(page, set, user) + topbarHtml(page, set, user) + tabbarHtml(page));
+    if (readPref(COLLAPSE_KEY, false)) setCollapsed(true);
+    bindShell();
+    bindMenuSelects();
+    startStudyTimer();
+  }
 
-    document.body.addEventListener("click", (event) => {
-      const target = event.target.closest("[data-action]");
-      if (!target) return;
-      if (target.dataset.action === "create-set") openCreateSet();
-      if (target.dataset.action === "upgrade") openUpgrade(target.dataset.feature);
-    });
+  // "just now", "8m ago", "3h ago", "2d ago", then a date.
+  function relativeTime(iso) {
+    if (!iso) return "never";
+    const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.round(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  }
+
+  // The SkipXam mascot: a round amber face.
+  function mascotHtml(size = 56) {
+    return `
+      <span class="mascot" style="--mascot-size: ${size}px" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="${size}" height="${size}">
+          <circle cx="32" cy="32" r="30" class="mascot-face"/>
+          <ellipse cx="22" cy="28" rx="4.5" ry="6" class="mascot-eye"/>
+          <ellipse cx="42" cy="28" rx="4.5" ry="6" class="mascot-eye"/>
+          <circle cx="23.5" cy="26" r="1.6" class="mascot-shine"/>
+          <circle cx="43.5" cy="26" r="1.6" class="mascot-shine"/>
+          <path d="M22 41c5 5 15 5 20 0" class="mascot-mouth"/>
+          <circle cx="15" cy="38" r="3.5" class="mascot-cheek"/>
+          <circle cx="49" cy="38" r="3.5" class="mascot-cheek"/>
+        </svg>
+      </span>`;
   }
 
   // Dev-only plan switcher, fixed to the bottom-left corner. Remove before launch.
@@ -628,6 +1156,7 @@
       <span class="dev-toggle-label">Dev</span>
       <button type="button" data-plan="free" aria-pressed="${plan === "free"}">Free</button>
       <button type="button" data-plan="pro" aria-pressed="${plan === "pro"}">Pro</button>
+      <button type="button" data-plan="max" aria-pressed="${plan === "max"}">Max</button>
     `;
 
     toggle.addEventListener("click", (event) => {
@@ -638,6 +1167,11 @@
     });
 
     document.body.appendChild(toggle);
+  }
+
+  // Shows a toast on the next page load (for actions that navigate away).
+  function queueToast(message) {
+    try { sessionStorage.setItem(FLASH_KEY, message); } catch (err) { /* toast is optional */ }
   }
 
   function showFlashToast() {
@@ -657,7 +1191,9 @@
 
   Object.assign(window, {
     openCreateSet, openUpgrade, openModal, confirmDialog, proGate, showToast,
+    openMaterials, openShare, openSearch, menuSelectHtml, fileBadgeHtml, fileKindLabel, allMaterials,
     escapeHtml, richText, icon, toolUrl, toolLabel, formatDate, formatCountdown, examLabel, masteryRing,
+    relativeTime, mascotHtml, queueToast, orbsHtml, planLabel, PLANS, avatarInnerHtml,
     setFromUrl, topicName, setNotFoundHtml, toolHeaderHtml, emptyStateHtml,
     TOOLS,
   });

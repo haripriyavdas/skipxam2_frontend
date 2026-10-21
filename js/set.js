@@ -9,14 +9,6 @@
   const setId = new URLSearchParams(location.search).get("set");
 
   const ACCEPT = ".pdf,.ppt,.pptx,.doc,.docx,image/*";
-  const FILE_TYPES = {
-    pdf: { label: "PDF", icon: "file" },
-    image: { label: "Image", icon: "image" },
-    pptx: { label: "Slides", icon: "slides" },
-    docx: { label: "Document", icon: "notes" },
-    audio: { label: "Lecture recording", icon: "mic" },
-  };
-
   // Steps shown while "processing" uploaded notes. Delays are fake.
   const PROCESS_STEPS = [
     { label: "Smart notes" },
@@ -24,12 +16,6 @@
     { label: "Quiz" },
     { label: "Study plan" },
     { label: "Practice test", pro: true },
-  ];
-
-  const TOOL_GROUPS = [
-    { title: "Organize", tools: ["notes", "plan", "record"] },
-    { title: "Learn", tools: ["tutor", "visual"] },
-    { title: "Practice", tools: ["flashcards", "quiz", "test"] },
   ];
 
   let processing = false;
@@ -62,12 +48,6 @@
     return `<input type="file" class="visually-hidden file-input" multiple accept="${ACCEPT}" tabindex="-1" aria-hidden="true">`;
   }
 
-  function topicTier(mastery) {
-    if (mastery >= 70) return "strong";
-    if (mastery >= 40) return "mid";
-    return "weak";
-  }
-
   // ---------------------------------------------------------------------------
   // Not found
   // ---------------------------------------------------------------------------
@@ -83,21 +63,22 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Upload state (no files yet)
+  // Upload state: a set with no files yet, or "Add more notes" (?upload=1)
   // ---------------------------------------------------------------------------
 
-  function renderUpload(set) {
+  function renderUpload(set, adding) {
     main.className = "container set-page set-upload";
     const previewTools = ["notes", "flashcards", "quiz", "plan", "test"];
     const meta = [set.subject, examLabel(set.examDate)].filter(Boolean).map(escapeHtml).join(" · ");
 
     main.innerHTML = `
       <div class="set-intro" style="--set-colour: ${set.colour}">
-        <span class="set-emoji-lg" aria-hidden="true">${set.emoji}</span>
+        <span class="set-tile set-tile-lg" aria-hidden="true">${set.emoji}</span>
         <div>
-          <h1>${escapeHtml(set.name)}</h1>
-          <p class="muted">${meta}</p>
+          <h1>${adding ? `Add notes to ${escapeHtml(set.name)}` : escapeHtml(set.name)}</h1>
+          <p class="muted">${adding ? `${set.files.length} ${set.files.length === 1 ? "file" : "files"} so far` : meta}</p>
         </div>
+        ${adding ? `<a class="btn btn-ghost btn-sm set-intro-back" href="set.html?set=${encodeURIComponent(set.id)}">Back to set</a>` : ""}
       </div>
 
       <button type="button" class="dropzone">
@@ -109,11 +90,11 @@
 
       <div class="upload-alt">
         <button type="button" class="btn btn-secondary" data-record>
-          ${icon("mic")}Record a lecture instead <span class="badge">Pro</span>
+          ${icon("mic")}Record a lecture instead <span class="badge badge-pro">Pro</span>
         </button>
       </div>
 
-      <section class="unlock-preview" aria-labelledby="unlock-title">
+      ${adding ? "" : `<section class="unlock-preview" aria-labelledby="unlock-title">
         <h2 id="unlock-title">Your notes will unlock</h2>
         <ul class="preview-tiles">
           ${previewTools.map((tool) => `
@@ -123,13 +104,13 @@
               ${TOOLS[tool].pro && isFree() ? `<span class="lock-badge">${icon("lock")}Pro</span>` : ""}
             </li>`).join("")}
         </ul>
-      </section>`;
+      </section>`}`;
 
     const dropzone = main.querySelector(".dropzone");
     const input = main.querySelector(".file-input");
 
     dropzone.addEventListener("click", () => input.click());
-    input.addEventListener("change", () => startProcessing(set.id, input.files, false));
+    input.addEventListener("change", () => startProcessing(set.id, input.files, adding));
 
     dropzone.addEventListener("dragover", (event) => {
       event.preventDefault();
@@ -141,7 +122,7 @@
     dropzone.addEventListener("drop", (event) => {
       event.preventDefault();
       dropzone.classList.remove("is-dragging");
-      startProcessing(set.id, event.dataTransfer.files, false);
+      startProcessing(set.id, event.dataTransfer.files, adding);
     });
 
     main.querySelector("[data-record]").addEventListener("click", () => {
@@ -204,181 +185,242 @@
     }
 
     await sleep(600);
-    addFilesToSet(id, files);
+    const updated = addFilesToSet(id, files);
+    logActivity(id, "upload", files.length === 1
+      ? `Uploaded ${files[0].name} to ${updated.name}`
+      : `Uploaded ${files.length} files to ${updated.name}`);
     processing = false;
-    render();
-    showToast(adding ? "Notes added" : "Your study set is ready");
+    // Drop ?upload=1 so the set home shows; reload so the sidebar lists the new materials.
+    queueToast(adding ? "Notes added" : "Your study set is ready");
+    location.replace(`set.html?set=${encodeURIComponent(id)}`);
   }
 
   // ---------------------------------------------------------------------------
   // Set home
   // ---------------------------------------------------------------------------
 
-  function headerHtml(set) {
-    const days = set.examDate ? daysUntil(set.examDate) : null;
-    const soon = days !== null && days >= 0 && days <= 3;
-    const mastery = getSetMastery(set);
-    const examDate = set.examDate && days >= 0 ? ` · ${formatDate(set.examDate)}` : "";
+  // Activity cards for the current topic. The first three always show; the rest sit behind "Show more".
+  const ACTIVITIES = [
+    { tool: "tutor", label: "Recommended", action: "Guided tutor session", art: "art-tutor" },
+    { tool: "notes", label: "Catch up quickly", action: "Read notes", art: "art-notes" },
+    { tool: "quiz", label: "Most popular", action: "Quiz", art: "art-quiz" },
+    { tool: "flashcards", label: "Quick review", action: "Flashcards", art: "art-cards" },
+    { tool: "test", label: "Exam practice", action: "Practice test", art: "art-test" },
+    { tool: "visual", label: "See the big picture", action: "Visual memory", art: "art-visual" },
+  ];
+  const FIRST_ACTIVITIES = 3;
 
+  let showMore = false;
+
+  function homeHeaderHtml(set) {
+    const meta = [set.subject, examLabel(set.examDate)].filter(Boolean).map(escapeHtml).join(" · ");
     return `
-      <header class="set-header" style="--set-colour: ${set.colour}">
-        <span class="set-emoji-lg" aria-hidden="true">${set.emoji}</span>
-        <div class="set-header-text">
+      <header class="set-head" style="--set-colour: ${set.colour}">
+        <span class="set-tile set-tile-lg" aria-hidden="true">${set.emoji}</span>
+        <div class="set-head-text">
           <h1>${escapeHtml(set.name)}</h1>
-          ${set.subject ? `<p class="muted">${escapeHtml(set.subject)}</p>` : ""}
-          <p class="set-exam-line${soon ? " is-soon" : ""}">${examLabel(set.examDate)}${examDate}</p>
+          ${meta ? `<p class="muted">${meta}</p>` : ""}
         </div>
-        ${set.topics.length ? masteryRing(mastery, { size: 64, urgent: soon && mastery < 50 }) : ""}
+        <div class="set-head-actions">
+          <button type="button" class="icon-btn" data-set-settings aria-label="Set settings" title="Set settings">${icon("settings")}</button>
+          <button type="button" class="icon-btn" data-duplicate aria-label="Duplicate set" title="Duplicate set">${icon("copy")}</button>
+        </div>
       </header>`;
   }
 
-  function topicsHtml(set) {
-    if (set.topics.length === 0) return "";
-    const topics = [...set.topics].sort((a, b) => b.mastery - a.mastery);
+  function statsHtml(set) {
+    const covered = set.topics.filter((t) => topicStatus(t) === "done").length;
+    const mastered = set.topics.filter(isMastered).length;
+    const pct = getSetProgress(set);
+    const stat = (iconName, n, label) => `
+      <li class="stat"><span class="stat-icon">${icon(iconName)}</span><span><strong>${n}</strong> ${label}</span></li>`;
     return `
-      <div class="topic-chips" aria-label="Topics by mastery">
-        ${topics.map((t) => `
-          <a class="chip topic-chip tier-${topicTier(t.mastery)}" href="${toolUrl("quiz", set.id, { topic: t.id })}"
-            aria-label="${escapeHtml(t.name)}, ${t.mastery}% mastery. Quiz this topic">
-            <span class="topic-dot" aria-hidden="true"></span>
-            ${escapeHtml(t.name)}
-            <span class="topic-pct">${t.mastery}%</span>
-          </a>`).join("")}
+      <section class="card stats-bar" aria-label="Progress">
+        <ul class="stats">
+          ${stat("notes", set.topics.length, set.topics.length === 1 ? "topic" : "topics")}
+          ${stat("check", covered, "covered")}
+          ${stat("sparkle", mastered, "mastered")}
+        </ul>
+        <div class="stats-progress">
+          <div class="progress" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+            <div class="progress-fill" style="width: ${pct}%"></div>
+          </div>
+          <span class="stats-pct">${pct}%</span>
+        </div>
+      </section>`;
+  }
+
+  function topicTabsHtml(plan, current) {
+    return `
+      <div class="topic-tabs" role="tablist" aria-label="Topics in your study plan">
+        ${plan.map((p, i) => {
+          const selected = p.topic.id === current.topic.id;
+          const status = topicStatus(p.topic);
+          return `
+            <button type="button" role="tab" class="topic-tab is-${status}" id="tab-${p.topic.id}" aria-controls="topic-panel"
+              aria-selected="${selected}" tabindex="${selected ? 0 : -1}" data-topic-tab="${p.topic.id}" title="${escapeHtml(p.topic.name)}">
+              <span class="topic-tab-num">${String(i + 1).padStart(2, "0")}</span>
+              <span class="topic-tab-name">${escapeHtml(p.topic.name)}</span>
+            </button>`;
+        }).join("")}
       </div>`;
   }
 
-  function todayTaskHtml(set) {
-    const today = todayISO();
-    const todays = set.studyPlan.filter((t) => t.date === today);
-    const current = todays.find((t) => !t.done);
-    const doneCount = todays.filter((t) => t.done).length;
-    const upcoming = set.studyPlan
-      .filter((t) => t.date > today && !t.done)
-      .sort((a, b) => a.date.localeCompare(b.date))[0];
-
-    const nextUp = upcoming
-      ? `<p class="muted">Next up: ${escapeHtml(upcoming.title)}, ${formatDate(upcoming.date)}</p>`
-      : "";
-
-    let body;
-    if (current) {
-      body = `
-        <div class="today-task-main">
-          <span class="tool-icon">${icon(TOOLS[current.tool] ? TOOLS[current.tool].icon : "plan")}</span>
-          <div>
-            <h2>${escapeHtml(current.title)}</h2>
-            <p class="muted">${toolLabel(current.tool)} · ${doneCount} of ${todays.length} done today</p>
-          </div>
-        </div>
-        <a class="btn btn-primary" href="${toolUrl(current.tool, set.id)}">Start</a>`;
-    } else if (todays.length) {
-      body = `<div><h2>All done for today</h2>${nextUp}</div>`;
-    } else if (set.studyPlan.length) {
-      body = `<div><h2>Nothing planned for today</h2>${nextUp}</div>`;
-    } else {
-      body = `
-        <div><h2>No study plan yet</h2><p class="muted">Add an exam date and we'll plan your study days.</p></div>
-        <a class="btn btn-secondary" href="${toolUrl("plan", set.id)}">Open study plan</a>`;
-    }
-
+  function activityCardHtml(a, set, topic) {
+    const tool = TOOLS[a.tool];
+    const locked = tool.pro && isFree();
     return `
-      <section class="card today-task" aria-label="Today's task">
-        <p class="eyebrow">Today's task</p>
-        <div class="today-task-body">${body}</div>
-      </section>`;
-  }
-
-  function toolMeta(tool, set) {
-    switch (tool) {
-      case "notes": return set.notes.length ? `${set.notes.length} sections` : "Ready soon";
-      case "plan": {
-        const done = set.studyPlan.filter((t) => t.done).length;
-        return set.studyPlan.length ? `${done} of ${set.studyPlan.length} tasks done` : "No tasks yet";
-      }
-      case "record": return "Turn a lecture into notes";
-      case "tutor": return "Ask anything about this set";
-      case "visual": return "Diagrams and memory maps";
-      case "flashcards": return `${set.flashcards.length} cards`;
-      case "quiz": return `${set.quiz.length} questions`;
-      case "test": return "Timed, exam-style papers";
-      default: return "";
-    }
-  }
-
-  function toolsHtml(set) {
-    const free = isFree();
-    const label = (tool) => (tool === "quiz" ? "Quizzes" : TOOLS[tool].label);
-
-    return `
-      <section class="tool-groups" aria-label="Study tools">
-        ${TOOL_GROUPS.map((group) => `
-          <div class="tool-group">
-            <h2>${group.title}</h2>
-            <div class="tool-grid">
-              ${group.tools.map((tool) => `
-                <a class="tool-tile" href="${toolUrl(tool, set.id)}">
-                  <span class="tool-icon">${icon(TOOLS[tool].icon)}</span>
-                  <span class="tool-text">
-                    <span class="tool-name">
-                      ${label(tool)}
-                      ${TOOLS[tool].pro && free ? `<span class="lock-badge">${icon("lock")}Pro</span>` : ""}
-                    </span>
-                    <span class="tool-meta">${toolMeta(tool, set)}</span>
-                  </span>
-                </a>`).join("")}
-            </div>
-          </div>`).join("")}
-      </section>`;
-  }
-
-  function sourcesHtml(set) {
-    const rows = set.files.map((file) => {
-      const type = FILE_TYPES[file.type] || { label: "File", icon: "file" };
-      return `
-        <li class="source">
-          <span class="source-icon">${icon(type.icon)}</span>
-          <span class="source-text">
-            <span class="source-name">${escapeHtml(file.name)}</span>
-            <span class="source-meta">${type.label} · Added ${formatDate(file.date)}</span>
+      <li class="activity-card">
+        <span class="activity-label">${a.label}</span>
+        <a class="activity-body" href="${toolUrl(a.tool, set.id, { topic: topic.id })}">
+          <span class="activity-art ${a.art}">
+            ${icon(tool.icon)}
+            ${locked ? `<span class="lock-badge activity-lock">${icon("lock")}Pro</span>` : ""}
           </span>
-        </li>`;
-    }).join("");
+          <span class="activity-action">${icon(tool.icon)}<span>${a.action}</span></span>
+        </a>
+      </li>`;
+  }
+
+  function topicCardHtml(set, current) {
+    const { topic, unit, unitTopics } = current;
+    const index = unitTopics.findIndex((t) => t.id === topic.id) + 1;
+    const status = topicStatus(topic);
+    const statusLabel = { done: "Covered", "in-progress": "In progress", "not-started": "Not started" }[status];
+    const shown = showMore ? ACTIVITIES : ACTIVITIES.slice(0, FIRST_ACTIVITIES);
 
     return `
-      <section class="card sources" aria-labelledby="sources-title">
-        <div class="section-head">
-          <h2 id="sources-title">Sources</h2>
-          <span class="muted">${set.files.length} ${set.files.length === 1 ? "file" : "files"}</span>
+      <section class="card topic-card" id="topic-panel" role="tabpanel" aria-labelledby="tab-${topic.id}">
+        <div class="topic-card-head">
+          <div>
+            <p class="eyebrow">Topic ${index} of ${unitTopics.length} from ${escapeHtml(unit.name)}</p>
+            <h2>${escapeHtml(topic.name)}</h2>
+            <p class="topic-meta"><span class="status-chip is-${status}">${statusLabel}</span><span class="muted">${topic.mastery}% mastery</span></p>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" data-skip>${icon("skip")}Skip topic</button>
         </div>
-        <ul class="source-list">${rows}</ul>
-        <button type="button" class="btn btn-secondary btn-block" data-add-notes>${icon("plus")}Add more notes</button>
-        ${fileInputHtml()}
+        <ul class="activity-grid">${shown.map((a) => activityCardHtml(a, set, topic)).join("")}</ul>
+        <button type="button" class="btn btn-secondary btn-sm show-more" data-show-more aria-expanded="${showMore}">
+          ${showMore ? "Show less" : "Show more"}
+        </button>
       </section>`;
   }
 
   // Floating button that opens the tutor for this set.
   function tutorButtonHtml(set) {
     return `
-      <a class="tutor-fab" href="${toolUrl("tutor", set.id)}">
-        ${icon("tutor")}<span>Ask Tutor</span>${isFree() ? '<span class="badge">Pro</span>' : ""}
+      <a class="tutor-fab glass" href="${toolUrl("tutor", set.id)}">
+        ${icon("tutor")}<span>Ask Tutor</span>${isFree() ? '<span class="badge badge-pro">Pro</span>' : ""}
       </a>`;
   }
 
   function renderHome(set) {
     main.className = "container set-page set-home";
-    main.innerHTML = [
-      headerHtml(set),
-      topicsHtml(set),
-      todayTaskHtml(set),
-      toolsHtml(set),
-      sourcesHtml(set),
-      tutorButtonHtml(set),
-    ].join("");
+    const plan = getPlanTopics(set);
+    const current = getCurrentTopic(set);
 
-    const input = main.querySelector(".file-input");
-    main.querySelector("[data-add-notes]").addEventListener("click", () => input.click());
-    input.addEventListener("change", () => startProcessing(set.id, input.files, true));
+    const recommended = current ? `
+      <section class="recommended" aria-labelledby="rec-title">
+        <div class="section-head">
+          <h2 id="rec-title">Recommended from your study plan</h2>
+          <a class="btn btn-secondary btn-sm" href="${toolUrl("plan", set.id)}">${icon("plan")}View full study plan</a>
+        </div>
+        ${topicTabsHtml(plan, current)}
+        ${topicCardHtml(set, current)}
+      </section>` : emptyStateHtml({
+        title: "Your study plan is on its way",
+        text: "Topics and activities appear here once your notes are processed.",
+        action: { label: "Upload more notes", href: `set.html?set=${encodeURIComponent(set.id)}&upload=1` },
+      });
+
+    main.innerHTML = `${homeHeaderHtml(set)}${statsHtml(set)}${recommended}${tutorButtonHtml(set)}`;
   }
+
+  // Selecting a topic (tab, skip, or ?topic=) makes it the current one and keeps the URL in step.
+  function selectTopic(topicIdValue, focusTab) {
+    setCurrentTopic(setId, topicIdValue);
+    const params = new URLSearchParams(location.search);
+    params.set("topic", topicIdValue);
+    history.replaceState(null, "", `?${params}`);
+    renderHome(getSet(setId));
+    if (focusTab) main.querySelector(`[data-topic-tab="${topicIdValue}"]`).focus();
+    main.querySelector(".topic-tab[aria-selected='true']").scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
+  function openSetSettings(set) {
+    const modal = openModal({
+      title: "Set settings",
+      body: `
+        <form class="settings-form">
+          <div class="field">
+            <label class="field-label" for="settings-name">Name</label>
+            <input class="input" id="settings-name" name="name" type="text" maxlength="60" value="${escapeHtml(set.name)}" required>
+          </div>
+          <div class="field">
+            <label class="field-label" for="settings-subject">Subject or exam <span class="muted">(optional)</span></label>
+            <input class="input" id="settings-subject" name="subject" type="text" maxlength="80" value="${escapeHtml(set.subject || "")}">
+          </div>
+          <div class="field">
+            <label class="field-label" for="settings-exam">Exam date <span class="muted">(optional)</span></label>
+            <input class="input" id="settings-exam" name="examDate" type="date" value="${set.examDate || ""}">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>`,
+    });
+    const form = modal.dialog.querySelector("form");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = form.elements.name.value.trim();
+      if (!name) return;
+      saveSet({ ...getSet(set.id), name, subject: form.elements.subject.value.trim(), examDate: form.elements.examDate.value || null });
+      modal.close();
+      location.reload(); // the sidebar and breadcrumb show the name too
+    });
+  }
+
+  function duplicate(set) {
+    if (isFree() && getSets().length >= 3) {
+      openUpgrade("Unlimited study sets");
+      return;
+    }
+    const copy = duplicateSet(set.id);
+    location.href = `set.html?set=${encodeURIComponent(copy.id)}`;
+  }
+
+  main.addEventListener("click", (event) => {
+    const t = event.target;
+    const set = setId && getSet(setId);
+    if (!set) return;
+    const tab = t.closest("[data-topic-tab]");
+    if (tab) return selectTopic(tab.dataset.topicTab, false);
+    if (t.closest("[data-skip]")) {
+      const next = skipTopic(setId);
+      if (next) selectTopic(next, false);
+      showToast("Skipped to the next topic");
+      main.querySelector("[data-skip]").focus();
+      return;
+    }
+    if (t.closest("[data-show-more]")) {
+      showMore = !showMore;
+      renderHome(set);
+      main.querySelector("[data-show-more]").focus();
+      return;
+    }
+    if (t.closest("[data-set-settings]")) return openSetSettings(set);
+    if (t.closest("[data-duplicate]")) duplicate(set);
+  });
+
+  main.addEventListener("keydown", (event) => {
+    const tab = event.target.closest("[data-topic-tab]");
+    if (!tab || (event.key !== "ArrowRight" && event.key !== "ArrowLeft")) return;
+    const tabs = [...main.querySelectorAll("[data-topic-tab]")];
+    const i = tabs.indexOf(tab);
+    const next = tabs[(i + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    selectTopic(next.dataset.topicTab, true);
+  });
 
   // ---------------------------------------------------------------------------
   // Render
@@ -388,8 +430,15 @@
     const set = setId ? getSet(setId) : null;
     if (!set) return renderNotFound();
     document.title = `${set.name} · SkipXam`;
-    if (set.files.length === 0) renderUpload(set);
-    else renderHome(set);
+    const params = new URLSearchParams(location.search);
+    if (set.files.length === 0) return renderUpload(set, false);
+    if (params.get("upload")) return renderUpload(set, true);
+    const topicParam = params.get("topic");
+    if (topicParam && set.topics.some((t) => t.id === topicParam) && set.currentTopicId !== topicParam) {
+      setCurrentTopic(set.id, topicParam);
+      return renderHome(getSet(set.id));
+    }
+    renderHome(set);
   }
 
   // Stop the browser opening a file dropped outside the drop zone.

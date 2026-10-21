@@ -7,7 +7,7 @@
   "use strict";
 
   // Bump the version whenever the data shape changes, so old saved data is re-seeded.
-  const STORAGE_KEY = "skipxam.data.v5";
+  const STORAGE_KEY = "skipxam.data.v7";
 
   // ---------------------------------------------------------------------------
   // Dates. All dates are "YYYY-MM-DD" strings in the user's local time zone
@@ -65,6 +65,11 @@
     return rows.map(({ topic, ...section }) => ({ topicId: topicId(setId, topic), formulas: [], ...section }));
   }
 
+  // units("java", [{ name, topics: [topicNumber, ...] }, ...]): topics grouped as in the syllabus.
+  function units(setId, rows) {
+    return rows.map(({ name, topics }, i) => ({ id: `${setId}-unit-${i + 1}`, name, topicIds: topics.map((n) => topicId(setId, n)) }));
+  }
+
   // mnemonics("java", [{ topic, title, trick, explain }, ...])
   function mnemonics(setId, rows) {
     return withIds(`${setId}-mn`, rows.map(({ topic, ...m }) => ({ topicId: topicId(setId, topic), ...m })));
@@ -93,10 +98,23 @@
 
   const SEED_USER = {
     name: "Samrat",
+    email: "samrat@example.com",
+    college: "City Engineering College",
+    course: "B.E. Computer Science",
+    year: 2,
+    avatar: null, // a small data: URL once the user uploads a picture
     streak: 7,
-    plan: "free", // "free" | "pro"
+    plan: "free", // "free" | "pro" | "max"
+    billing: "monthly", // "monthly" | "yearly"
+    planRenews: null, // renewal date for paid plans
+    referral: { code: "SAMRAT7", joined: 2 },
+    settings: { dailyGoal: 60, notifications: true, theme: "dark" },
+    stats: { flashcardsReviewed: 412, quizzesTaken: 23, quizScoreTotal: 1656 }, // average = total / taken
+    history: {}, // { "YYYY-MM-DD": minutes } for past days; seed() fills 16 weeks
     calendarConnected: false, // mock Google Calendar connection
     reminders: { enabled: true, time: "18:00", days: [1, 2, 3, 4, 5] }, // days: 0 = Sunday
+    studyToday: { date: null, minutes: 50 }, // seed() sets the date; the shell adds a minute per minute studied
+    dismissed: {}, // hints the user has closed, e.g. { planHowItWorks: true }
   };
 
   const javaSet = {
@@ -180,6 +198,13 @@
       {"topic": 5, "intro": "The Collections Framework gives ready-made data structures under three main interfaces.", "points": ["**List**: ordered and allows duplicates (ArrayList, LinkedList).", "**Set**: no duplicates (HashSet, TreeSet).", "**Map**: key-value pairs (HashMap, TreeMap). It is not a subtype of Collection.", "ArrayList gives fast random access; LinkedList gives fast inserts and removals at the ends."], "remember": "HashMap allows one null key and many null values, keeps no order, and is not synchronized."},
       {"topic": 6, "intro": "A **thread** is an independent path of execution inside a program.", "points": ["Create one by extending **Thread** or implementing **Runnable**, then call `start()`.", "Thread states: New, Runnable, Blocked, Waiting, Timed Waiting, Terminated.", "`synchronized` lets only one thread at a time run a block on the same object, preventing **race conditions**.", "`Thread.sleep(ms)` pauses the current thread without releasing its locks."], "remember": "Calling run() directly runs the code on the current thread. Only start() creates a new one."},
     ]),
+    units: units("java", [
+      { name: "Java Programming Fundamentals and OOP", topics: [1, 2, 4] },
+      { name: "Exceptions, Collections and Concurrency", topics: [3, 5, 6] },
+    ]),
+    currentTopicId: null,
+    planMode: "standard",
+    planSort: "recommended",
     mnemonics: mnemonics("java", [
       {"topic": 1, "title": "A PIE", "trick": "The four pillars of OOP spell A PIE.", "explain": "**A**bstraction, **P**olymorphism, **I**nheritance, **E**ncapsulation."},
       {"topic": 2, "title": "Stone vs builder", "trick": "Strings are set in stone; builders build.", "explain": "A String can never change, so each edit makes a new one. StringBuilder edits in place."},
@@ -297,6 +322,13 @@
       {"topic": 5, "intro": "A **pure substance** has a fixed chemical composition in every phase, like water and steam.", "points": ["Heating water at constant pressure: compressed liquid → saturated liquid → wet steam → dry saturated steam → **superheated steam**.", "At the **critical point**, liquid and vapour become indistinguishable and latent heat is zero.", "At the **triple point**, solid, liquid and vapour coexist."], "formulas": [{"label": "Dryness fraction", "expr": "x = m_vapour / (m_vapour + m_liquid)"}, {"label": "Enthalpy of wet steam", "expr": "h = h_f + x · h_fg"}], "remember": "x = 0 is saturated liquid and x = 1 is dry saturated vapour."},
       {"topic": 6, "intro": "Gas power cycles model IC engines using **air-standard assumptions**: air is an ideal gas and combustion is treated as heat addition.", "points": ["**Otto cycle** (petrol engines): heat added at constant volume.", "**Diesel cycle**: heat added at constant pressure.", "**Compression ratio** r = V_max / V_min.", "For the same compression ratio and heat input, Otto is more efficient than Diesel."], "formulas": [{"label": "Otto efficiency", "expr": "η = 1 − 1 / r^(γ−1)"}], "remember": "Otto efficiency depends only on r (and γ). Diesel efficiency also depends on the cut-off ratio."},
     ]),
+    units: units("thermo", [
+      { name: "Laws of Thermodynamics", topics: [1, 2, 4] },
+      { name: "Engines, Cycles and Steam", topics: [3, 5, 6] },
+    ]),
+    currentTopicId: null,
+    planMode: "standard",
+    planSort: "recommended",
     mnemonics: mnemonics("thermo", [
       {"topic": 1, "title": "Closed keeps mass, isolated keeps everything", "trick": "Closed: mass stays in. Open: anything goes. Isolated: nothing in, nothing out.", "explain": "Closed systems exchange only energy; open systems exchange mass and energy; isolated exchange neither."},
       {"topic": 2, "title": "Heat in, work out, rest stays inside", "trick": "Q − W = ΔU: heat comes In, work goes Out, the rest stays Inside as internal energy.", "explain": "Heat added is positive and work done by the system is positive."},
@@ -413,6 +445,13 @@
       {"topic": 5, "intro": "An **index** is an extra structure that speeds up lookups on a column, like the index of a book.", "points": ["Most DBMSs use **B+ trees**: balanced, with all data pointers at the leaves for fast range scans.", "A **clustered index** sets the physical row order, so a table has at most one. **Non-clustered** indexes are separate structures.", "Indexes speed up SELECT but slow down INSERT, UPDATE and DELETE, and take extra storage."], "remember": "Index columns you often search, join or sort on. Skip tiny tables and columns that change constantly."},
       {"topic": 6, "intro": "**Concurrency control** keeps simultaneous transactions from corrupting each other's data.", "points": ["Problems without it: **lost update**, **dirty read** (reading uncommitted data), unrepeatable read.", "**Two-phase locking (2PL)**: a growing phase (only acquire locks), then a shrinking phase (only release). It guarantees conflict serializability.", "**Deadlock** needs mutual exclusion, hold and wait, no preemption and circular wait."], "remember": "Basic 2PL can still deadlock. Strict 2PL holds write locks until commit to avoid cascading rollbacks."},
     ]),
+    units: units("dbms", [
+      { name: "Data Modelling and SQL", topics: [1, 2, 3] },
+      { name: "Transactions and Storage", topics: [4, 5, 6] },
+    ]),
+    currentTopicId: null,
+    planMode: "standard",
+    planSort: "recommended",
     mnemonics: mnemonics("dbms", [
       {"topic": 1, "title": "Some French Waiters Grow Healthy Oranges", "trick": "Some French Waiters Grow Healthy Oranges.", "explain": "SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY: the order you write the clauses."},
       {"topic": 2, "title": "Super Cats Purr", "trick": "Super Cats Purr: every Primary key is a Candidate key, and every Candidate key is a Super key.", "explain": "Super key ⊇ candidate key (minimal) ⊇ primary key (the chosen one)."},
@@ -484,7 +523,41 @@
     const lecture = buildRecording(java, "java-topic-3", 1260, addDays(today, -3));
     java.recordings.push(lecture.recording);
     java.files.push(lecture.file);
-    return { sets, folders: clone(SEED_FOLDERS), user: clone(SEED_USER) };
+    const user = clone(SEED_USER);
+    user.studyToday.date = today;
+    user.history = seedHistory(today);
+
+    const ago = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
+    const activities = [
+      { setId: "java", type: "quiz", text: "Took a quiz in Java, 7/10", at: ago(2) },
+      { setId: "java", type: "flashcards", text: "Reviewed 20 flashcards in Java", at: ago(5) },
+      { setId: "dbms", type: "quiz", text: "Took a quiz in DBMS, 4/10", at: ago(28) },
+      { setId: "thermo", type: "notes", text: "Read notes on First Law of Thermodynamics", at: ago(30) },
+      { setId: "java", type: "record", text: "Recorded a lecture: Exception Handling", at: ago(72) },
+      { setId: "dbms", type: "upload", text: "Uploaded SQL_Practice_Queries.docx to DBMS", at: ago(80) },
+    ].map((a, i) => ({ id: `act-seed-${i + 1}`, ...a }));
+
+    return { sets, folders: clone(SEED_FOLDERS), user, activities };
+  }
+
+  // 16 weeks of mock study minutes. Fixed pattern so the demo looks the same
+  // every time: a 7-day current streak (today counts via studyToday), a gap
+  // 7 days ago, and a 12-day run about six weeks back (the longest streak).
+  function seedHistory(today) {
+    const history = {};
+    let x = 7;
+    const rand = () => { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+    for (let i = 1; i < 16 * 7; i++) {
+      const r = rand();
+      let minutes = r < 0.35 ? 0 : Math.round(10 + rand() * 80);
+      if (i < 7) minutes = Math.max(minutes, 20 + i * 7);   // current streak
+      if (i === 7 || i === 39 || i === 52) minutes = 0;     // streak breaks
+      if (i >= 40 && i <= 51) minutes = Math.max(minutes, 35); // longest run: 12 days
+      if (i > 7 && i < 39 && minutes > 0 && i % 5 === 0) minutes = 0; // no run longer than 12
+      if (i > 52 && minutes > 0 && i % 9 === 0) minutes = 0;
+      if (minutes) history[addDays(today, -i)] = minutes;
+    }
+    return history;
   }
 
   function load() {
@@ -565,6 +638,10 @@
       diagrams: [],
       recordings: [],
       planExamDate: null,
+      units: [],
+      currentTopicId: null,
+      planMode: "standard",
+      planSort: "recommended",
       studyPlan: [],
       lastOpened: null,
       lastActivity: null,
@@ -602,6 +679,7 @@
       card.interval = 0;
       card.due = todayISO();
     }
+    load().user.stats.flashcardsReviewed += 1;
     persist();
   }
 
@@ -741,6 +819,147 @@
     return getUser().reminders;
   }
 
+  // ---------- Topics, units and the topic-level study plan ----------
+  // Topic status comes from mastery so quizzes keep it up to date:
+  // done ("covered") at 75%+, in progress once started, mastered at 90%+.
+
+  function topicStatus(topic) {
+    if (topic.mastery >= 75) return "done";
+    if (topic.mastery > 0) return "in-progress";
+    return "not-started";
+  }
+
+  const isMastered = (topic) => topic.mastery >= 90;
+
+  // Overall progress: done topics count fully, in-progress ones half.
+  function getSetProgress(set) {
+    if (!set.topics.length) return 0;
+    const score = set.topics.reduce((n, t) => n + ({ done: 1, "in-progress": 0.5 }[topicStatus(t)] || 0), 0);
+    return Math.round((score / set.topics.length) * 100);
+  }
+
+  const PLAN_MODES = {
+    cram: { label: "Cram", share: 0.4, hint: "Cram: highest-priority topics only, 40%" },
+    standard: { label: "Standard", share: 0.7, hint: "Standard: the topics most likely to come up, 70%" },
+    comprehensive: { label: "Comprehensive", share: 1, hint: "Comprehensive: every topic in the syllabus, 100%" },
+  };
+
+  const PLAN_SORTS = {
+    recommended: { label: "Recommended" },
+    exam: { label: "Exam order" },
+    weakest: { label: "Weakest first" },
+  };
+
+  const STATUS_RANK = { "in-progress": 0, "not-started": 1, done: 2 };
+
+  // The plan as unit groups: [{ unit, topics: [...] }]. The mode keeps the
+  // highest-priority (lowest mastery) share of topics; the sort orders topics
+  // inside each unit. Units stay in syllabus order.
+  function getPlanGroups(set) {
+    const mode = PLAN_MODES[set.planMode] || PLAN_MODES.standard;
+    const unitList = set.units.length ? set.units
+      : [{ id: `${set.id}-unit-all`, name: "All topics", topicIds: set.topics.map((t) => t.id) }];
+    const count = Math.ceil(set.topics.length * mode.share);
+    const keep = new Set([...set.topics].sort((a, b) => a.mastery - b.mastery).slice(0, count).map((t) => t.id));
+
+    const order = (a, b) => {
+      if (set.planSort === "weakest") return a.mastery - b.mastery;
+      if (set.planSort === "exam") return 0; // stable sort keeps syllabus order
+      return STATUS_RANK[topicStatus(a)] - STATUS_RANK[topicStatus(b)] || a.mastery - b.mastery;
+    };
+
+    return unitList
+      .map((unit) => ({
+        unit,
+        topics: unit.topicIds.map((id) => set.topics.find((t) => t.id === id)).filter((t) => t && keep.has(t.id)).sort(order),
+      }))
+      .filter((g) => g.topics.length);
+  }
+
+  function getPlanTopics(set) {
+    return getPlanGroups(set).flatMap((g) => g.topics.map((topic) => ({ topic, unit: g.unit, unitTopics: g.topics })));
+  }
+
+  // The topic to study now: the chosen one if it's still in the plan, otherwise the first unfinished one.
+  function getCurrentTopic(set) {
+    const plan = getPlanTopics(set);
+    if (!plan.length) return null;
+    return plan.find((p) => p.topic.id === set.currentTopicId)
+      || plan.find((p) => topicStatus(p.topic) !== "done")
+      || plan[0];
+  }
+
+  function setCurrentTopic(setId, topicIdValue) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`setCurrentTopic: no set "${setId}"`);
+    set.currentTopicId = topicIdValue;
+    persist();
+  }
+
+  // Moves on to the next topic in the plan (wrapping round). Returns the new topic id.
+  function skipTopic(setId) {
+    const set = getSet(setId);
+    const plan = getPlanTopics(set);
+    const current = getCurrentTopic(set);
+    if (!current) return null;
+    const next = plan[(plan.findIndex((p) => p.topic.id === current.topic.id) + 1) % plan.length];
+    setCurrentTopic(setId, next.topic.id);
+    return next.topic.id;
+  }
+
+  function setPlanOptions(setId, { mode, sort }) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`setPlanOptions: no set "${setId}"`);
+    if (mode && PLAN_MODES[mode]) set.planMode = mode;
+    if (sort && PLAN_SORTS[sort]) set.planSort = sort;
+    persist();
+  }
+
+  // Copies a set's content into a new set named "<name> (copy)". Returns the copy.
+  function duplicateSet(setId) {
+    const original = getSet(setId);
+    if (!original) throw new Error(`duplicateSet: no set "${setId}"`);
+    const { id, createdAt, lastOpened, lastActivity, ...content } = original;
+    return createSet({ ...content, name: `${original.name} (copy)` });
+  }
+
+  // ---------- Activity log ----------
+  // type: quiz | flashcards | notes | test | upload | record | tutor
+
+  function logActivity(setId, type, text) {
+    const data = load();
+    data.activities = data.activities || [];
+    data.activities.unshift({ id: `act-${Date.now().toString(36)}`, setId, type, text, at: new Date().toISOString() });
+    data.activities = data.activities.slice(0, 50);
+    persist();
+  }
+
+  function getActivities() {
+    return clone(load().activities || []);
+  }
+
+  // ---------- Study timer + dismissed hints ----------
+
+  function getStudiedToday() {
+    const st = load().user.studyToday;
+    return st && st.date === todayISO() ? st.minutes : 0;
+  }
+
+  function addStudyMinute() {
+    const user = load().user;
+    const today = todayISO();
+    if (!user.studyToday || user.studyToday.date !== today) user.studyToday = { date: today, minutes: 0 };
+    user.studyToday.minutes += 1;
+    persist();
+    return user.studyToday.minutes;
+  }
+
+  function dismissHint(key) {
+    const user = load().user;
+    user.dismissed = { ...(user.dismissed || {}), [key]: true };
+    persist();
+  }
+
   function setTaskDone(setId, taskId, done) {
     const set = load().sets.find((s) => s.id === setId);
     const task = set && set.studyPlan.find((t) => t.id === taskId);
@@ -762,11 +981,92 @@
     return clone(load().user);
   }
 
-  function setPlan(plan) {
-    if (plan !== "free" && plan !== "pro") throw new Error(`setPlan: unknown plan "${plan}"`);
-    load().user.plan = plan;
+  // plan: "free" | "pro" | "max". billing: "monthly" | "yearly".
+  function setPlan(plan, billing) {
+    if (!["free", "pro", "max"].includes(plan)) throw new Error(`setPlan: unknown plan "${plan}"`);
+    const user = load().user;
+    user.plan = plan;
+    if (billing) user.billing = billing;
+    user.planRenews = plan === "free" ? null : addDays(todayISO(), user.billing === "yearly" ? 365 : 30);
     persist();
     return getUser();
+  }
+
+  // ---------- Profile, settings and study history ----------
+
+  function updateProfile(fields) {
+    const user = load().user;
+    for (const key of ["name", "college", "course", "year", "avatar"]) {
+      if (key in fields) user[key] = fields[key];
+    }
+    persist();
+    return getUser();
+  }
+
+  function saveSettings(settings) {
+    const user = load().user;
+    user.settings = { ...user.settings, ...settings };
+    persist();
+    applyTheme();
+    return getUser().settings;
+  }
+
+  // Sets <html data-theme> from the saved setting. Runs on every page load.
+  function applyTheme() {
+    const theme = (load().user.settings || {}).theme || "dark";
+    document.documentElement.dataset.theme = theme;
+  }
+
+  // The last `days` days, oldest first: [{ date, minutes }]. Today uses the live timer.
+  function getStudyHistory(days) {
+    const user = load().user;
+    const today = todayISO();
+    return Array.from({ length: days }, (_, i) => {
+      const date = addDays(today, i - days + 1);
+      return { date, minutes: date === today ? getStudiedToday() : (user.history || {})[date] || 0 };
+    });
+  }
+
+  // Streaks in days. The current streak still counts if today has no study yet.
+  function getStreaks() {
+    const days = getStudyHistory(16 * 7);
+    let longest = 0;
+    let run = 0;
+    for (const d of days) {
+      run = d.minutes > 0 ? run + 1 : 0;
+      longest = Math.max(longest, run);
+    }
+    let current = 0;
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (days[i].minutes > 0) current++;
+      else if (i === days.length - 1) continue; // today not started yet
+      else break;
+    }
+    return { current, longest };
+  }
+
+  function getUserStats() {
+    const user = load().user;
+    const minutes = getStudyHistory(16 * 7).reduce((sum, d) => sum + d.minutes, 0);
+    const { flashcardsReviewed, quizzesTaken, quizScoreTotal } = user.stats;
+    return {
+      hours: Math.round(minutes / 60),
+      flashcards: flashcardsReviewed,
+      quizzes: quizzesTaken,
+      avgScore: quizzesTaken ? Math.round(quizScoreTotal / quizzesTaken) : 0,
+    };
+  }
+
+  // pct: the quiz score, 0–100.
+  function recordQuizScore(pct) {
+    const stats = load().user.stats;
+    stats.quizzesTaken += 1;
+    stats.quizScoreTotal += pct;
+    persist();
+  }
+
+  function exportData() {
+    return JSON.stringify(load(), null, 2);
   }
 
   // files: [{ name, type }] where type is pdf | image | pptx | docx. Dated today.
@@ -838,12 +1138,18 @@
     persist();
   }
 
+  applyTheme();
+
   Object.assign(window, {
     getSets, getSet, saveSet, createSet, deleteSet, addFilesToSet, markSetOpened,
-    getUser, setPlan, resetData,
+    getUser, setPlan, resetData, updateProfile, saveSettings, applyTheme,
+    getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData,
     getFolders, createFolder, moveSetToFolder,
     getSetMastery, setTaskDone, recordActivity, isCardDue, reviewFlashcard, applyTopicResults,
     adjustTopicMastery, setExamDate, buildStudyPlan, createRecording, setCalendarConnected, saveReminders,
+    topicStatus, isMastered, getSetProgress, PLAN_MODES, PLAN_SORTS, getPlanGroups, getPlanTopics,
+    getCurrentTopic, setCurrentTopic, skipTopic, setPlanOptions, duplicateSet,
+    logActivity, getActivities, getStudiedToday, addStudyMinute, dismissHint,
     toISODate, parseDate, addDays, todayISO, daysUntil,
   });
 })();

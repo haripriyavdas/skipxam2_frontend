@@ -171,7 +171,7 @@
     }
     const s = set();
     document.title = `Record lecture · ${s.name} · SkipXam`;
-    const proBadge = getUser().plan === "free" ? ' <span class="badge">Pro</span>' : "";
+    const proBadge = getUser().plan === "free" ? ' <span class="badge badge-pro">Pro</span>' : "";
 
     main.innerHTML = `
       ${toolHeaderHtml(s, `Record lecture${proBadge}`)}
@@ -222,7 +222,7 @@
   }
 
   function record() {
-    if (getUser().plan !== "pro") {
+    if (getUser().plan === "free") {
       openUpgrade("Record lecture");
       return;
     }
@@ -277,6 +277,7 @@
     // Mock lectures are at least a minute long so the transcript has room to breathe.
     const durationSec = Math.max(60, Math.round(state.elapsedMs / 1000));
     state.latest = createRecording(s.id, { topicId: chosenTopic(s), durationSec });
+    logActivity(s.id, "record", `Recorded a lecture: ${state.latest.title.replace(/ lecture$/, "")}`);
     state.screen = "done";
     render();
     main.querySelector("#result-title").focus();

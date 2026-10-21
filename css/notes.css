@@ -18,18 +18,12 @@
 
 .notes-toc-mobile {
   position: sticky;
-  top: calc(var(--topbar-height) + var(--space-2));
+  top: calc(var(--topbar-height) + var(--space-2)); /* below the sticky top bar */
   z-index: 5;
 }
 
 .notes-toc-mobile .input {
   background: var(--color-surface-raised);
-}
-
-@media (min-width: 900px) {
-  .notes-toc-mobile {
-    top: var(--space-2);
-  }
 }
 
 @media (min-width: 1100px) {
@@ -41,7 +35,7 @@
   .notes-toc {
     display: block;
     position: sticky;
-    top: var(--space-5);
+    top: calc(var(--topbar-height) + var(--space-4));
   }
 
   .notes-toc-mobile {
@@ -100,8 +94,8 @@
   scroll-margin-top: calc(var(--topbar-height) + 72px);
 }
 
-@media (min-width: 900px) {
-  .note-section { scroll-margin-top: var(--space-5); }
+@media (min-width: 1100px) {
+  .note-section { scroll-margin-top: calc(var(--topbar-height) + var(--space-4)); }
 }
 
 .note-section summary {

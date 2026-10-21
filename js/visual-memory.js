@@ -226,7 +226,7 @@
       return;
     }
     document.title = `Visual memory · ${set.name} · SkipXam`;
-    const proBadge = getUser().plan === "free" ? ' <span class="badge">Pro</span>' : "";
+    const proBadge = getUser().plan === "free" ? ' <span class="badge badge-pro">Pro</span>' : "";
 
     main.innerHTML = `
       ${toolHeaderHtml(set, `Visual memory${proBadge}`)}

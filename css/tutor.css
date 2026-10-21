@@ -54,7 +54,7 @@
 
   .tutor-side {
     position: sticky;
-    top: var(--space-5);
+    top: calc(var(--topbar-height) + var(--space-4));
   }
 }
 

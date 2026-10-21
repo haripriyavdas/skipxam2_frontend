@@ -233,6 +233,7 @@
       state.flipped = false;
       state.busy = false;
       state.done = state.queue.length === 0;
+      if (state.done) logActivity(initialSet.id, "flashcards", `Reviewed ${state.deckSize} flashcards in ${initialSet.name}`);
       renderBody();
       const next = main.querySelector(".flashcard");
       if (next) next.focus();

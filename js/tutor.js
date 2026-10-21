@@ -234,7 +234,7 @@
   function pickerHtml() {
     const sets = getSets();
     return `
-      <header class="tool-header"><div class="tool-header-row"><h1>Tutor${getUser().plan === "free" ? ' <span class="badge">Pro</span>' : ""}</h1></div></header>
+      <header class="tool-header"><div class="tool-header-row"><h1>Tutor${getUser().plan === "free" ? ' <span class="badge badge-pro">Pro</span>' : ""}</h1></div></header>
       <p class="muted tutor-picker-intro">Choose a study set to start a session.</p>
       ${sets.length ? `
         <ul class="tutor-picker">
@@ -254,7 +254,7 @@
     }
     const s = set();
     document.title = `Tutor · ${s.name} · SkipXam`;
-    const proBadge = getUser().plan === "free" ? ' <span class="badge">Pro</span>' : "";
+    const proBadge = getUser().plan === "free" ? ' <span class="badge badge-pro">Pro</span>' : "";
 
     if (s.topics.length === 0) {
       main.innerHTML = `${toolHeaderHtml(s, `Tutor${proBadge}`)}${emptyStateHtml({

@@ -1,7 +1,8 @@
 /*
  * Study plan (app/plan.html?set=<id>). Load after data.js and app.js.
- * Day-by-day tasks from today to the exam, with checkboxes that save.
- * No exam date → ask for one. Exam date changed → offer "Rebuild plan".
+ * A topic timeline grouped by unit. Mode (Cram / Standard / Comprehensive)
+ * decides how many topics are in the plan; Sort orders them; Filter hides
+ * topics by status. Clicking a topic opens the set home with it selected.
  */
 (function () {
   "use strict";
@@ -9,123 +10,179 @@
   const main = document.querySelector("main");
   const { set: initialSet } = setFromUrl();
   const set = () => getSet(initialSet.id);
-  let editingDate = false;
+
+  const STATUS_LABELS = { "not-started": "Not started", "in-progress": "In progress", done: "Covered" };
+
+  const state = {
+    statuses: new Set(Object.keys(STATUS_LABELS)), // shown statuses
+    collapsed: new Set(),                          // collapsed unit ids
+    filterOpen: false,
+  };
 
   // ---------------------------------------------------------------------------
   // Pieces
   // ---------------------------------------------------------------------------
 
-  function taskHtml(task) {
-    const params = task.topicId ? { topic: task.topicId } : {};
+  function headerHtml(s) {
+    const showHint = !(getUser().dismissed || {}).planHowItWorks;
     return `
-      <li class="plan-task${task.done ? " is-done" : ""}">
-        <input type="checkbox" class="checkbox" data-task="${task.id}"${task.done ? " checked" : ""}
-          aria-label="Mark “${escapeHtml(task.title)}” done">
-        <a class="plan-task-link" href="${toolUrl(task.tool, initialSet.id, params)}">
-          <span class="plan-task-tool">${icon(TOOLS[task.tool] ? TOOLS[task.tool].icon : "plan")}</span>
-          <span>${escapeHtml(task.title)}</span>
-        </a>
+      <header class="set-head" style="--set-colour: ${s.colour}">
+        <span class="set-tile set-tile-lg" aria-hidden="true">${s.emoji}</span>
+        <div class="set-head-text">
+          <h1>${escapeHtml(s.name)}: Study plan</h1>
+          ${showHint ? `
+            <p class="how-it-works">
+              <button type="button" class="link-btn" data-how>How it works</button>
+              <button type="button" class="icon-btn how-dismiss" data-dismiss-how aria-label="Dismiss How it works">${icon("close")}</button>
+            </p>` : ""}
+        </div>
+      </header>`;
+  }
+
+  function customizeHtml(s) {
+    const modeMenu = menuSelectHtml({
+      name: "mode", prefix: "Mode:", label: "Plan mode", value: s.planMode,
+      options: Object.entries(PLAN_MODES).map(([value, m]) => ({ value, label: m.label, hint: m.hint })),
+    });
+    const sortMenu = menuSelectHtml({
+      name: "sort", prefix: "Sort by:", label: "Sort topics by", value: s.planSort,
+      options: Object.entries(PLAN_SORTS).map(([value, x]) => ({ value, label: x.label, icon: value === "recommended" ? "sparkle" : "" })),
+    });
+    const filtered = state.statuses.size < Object.keys(STATUS_LABELS).length;
+
+    return `
+      <section class="card customize" aria-label="Customize your plan">
+        <span class="customize-title">Customize</span>
+        ${modeMenu}
+        ${sortMenu}
+        <div class="customize-icons">
+          <div class="filter-wrap">
+            <button type="button" class="icon-btn${filtered ? " is-active" : ""}" data-filter aria-label="Filter topics by status"
+              aria-expanded="${state.filterOpen}" aria-controls="status-filter">${icon("filter")}</button>
+            <div class="filter-pop glass" id="status-filter"${state.filterOpen ? "" : " hidden"}>
+              <p class="field-label">Show topics</p>
+              ${Object.entries(STATUS_LABELS).map(([value, label]) => `
+                <label class="filter-option">
+                  <input type="checkbox" class="checkbox" data-status="${value}"${state.statuses.has(value) ? " checked" : ""}>
+                  <span>${label}</span>
+                </label>`).join("")}
+            </div>
+          </div>
+          <button type="button" class="icon-btn" data-plan-settings aria-label="Plan settings">${icon("settings")}</button>
+        </div>
+      </section>`;
+  }
+
+  function statusCircle(status) {
+    const label = STATUS_LABELS[status];
+    return `<span class="status-circle is-${status}" role="img" aria-label="${label}">${status === "done" ? icon("check") : ""}</span>`;
+  }
+
+  function unitHtml(s, group) {
+    const { unit, topics } = group;
+    const shown = topics.filter((t) => state.statuses.has(topicStatus(t)));
+    if (!shown.length) return "";
+    const covered = topics.filter((t) => topicStatus(t) === "done").length;
+    const open = !state.collapsed.has(unit.id);
+
+    return `
+      <li class="tl-item tl-unit">
+        <span class="tl-node" aria-hidden="true"></span>
+        <div class="unit">
+          <button type="button" class="unit-head" data-unit="${unit.id}" aria-expanded="${open}" aria-controls="unit-${unit.id}">
+            <span class="unit-name">${escapeHtml(unit.name)}</span>
+            <span class="unit-count muted">${covered}/${topics.length} covered</span>
+            <span class="unit-chevron">${icon("chevronDown")}</span>
+          </button>
+          <div class="unit-body" id="unit-${unit.id}"${open ? "" : " hidden"}>
+            <div class="knowledge-check">
+              <span class="kc-icon">${icon("quiz")}</span>
+              <span class="kc-text"><strong>Knowledge check</strong><span class="muted">3 min</span></span>
+              <a class="btn btn-primary btn-sm" href="quiz.html?set=${encodeURIComponent(s.id)}&unit=${encodeURIComponent(unit.id)}">Continue</a>
+            </div>
+            <ul class="topic-rows">
+              ${shown.map((t) => `
+                <li>
+                  <a class="topic-row" href="set.html?set=${encodeURIComponent(s.id)}&topic=${encodeURIComponent(t.id)}">
+                    ${statusCircle(topicStatus(t))}
+                    <span class="topic-row-name">${escapeHtml(t.name)}</span>
+                    <span class="topic-row-pct muted">${t.mastery}%</span>
+                    ${icon("chevronRight")}
+                  </a>
+                </li>`).join("")}
+            </ul>
+          </div>
+        </div>
       </li>`;
   }
 
-  function askForDateHtml(s, passed) {
+  function timelineHtml(s) {
+    const groups = getPlanGroups(s);
+    const inPlan = groups.reduce((n, g) => n + g.topics.length, 0);
+    const units = groups.map((g) => unitHtml(s, g)).join("");
+    const mode = PLAN_MODES[s.planMode];
+
     return `
-      <section class="card plan-ask" aria-labelledby="ask-title">
-        <span class="tool-icon">${icon("calendar")}</span>
-        <h2 id="ask-title">${passed ? "Your exam date has passed" : "When is your exam?"}</h2>
-        <p class="muted">${passed
-          ? "Set your next exam date and we'll plan your study days again."
-          : `Add the date and we'll plan every day from today until your ${escapeHtml(s.name)} exam.`}</p>
-        <form class="plan-ask-form" data-date-form>
-          <label class="visually-hidden" for="ask-date">Exam date</label>
-          <input class="input" type="date" id="ask-date" name="examDate" min="${addDays(todayISO(), 1)}" required>
-          <button type="submit" class="btn btn-primary">Build my plan</button>
-        </form>
-      </section>`;
+      <p class="plan-summary muted" aria-live="polite">
+        ${inPlan} of ${s.topics.length} topics in your plan · ${mode.label} mode
+      </p>
+      <ol class="timeline">
+        <li class="tl-item tl-start">
+          <span class="tl-node is-start" aria-hidden="true">${icon("send")}</span>
+          <div class="tl-start-text"><strong>Start</strong><span class="muted">${s.examDate ? examLabel(s.examDate) : "Work through the units in order"}</span></div>
+        </li>
+        ${units || '<li class="tl-item"><span class="tl-node" aria-hidden="true"></span><p class="muted tl-none">No topics match this filter.</p></li>'}
+        ${s.examDate && daysUntil(s.examDate) >= 0 ? `
+          <li class="tl-item tl-end">
+            <span class="tl-node is-end" aria-hidden="true">${icon("test")}</span>
+            <div class="tl-start-text"><strong>Exam day</strong><span class="muted">${formatDate(s.examDate)}</span></div>
+          </li>` : ""}
+      </ol>`;
   }
 
-  function progressHtml(s) {
-    const today = todayISO();
-    const planned = s.studyPlan.filter((t) => t.date <= s.examDate);
-    const done = planned.filter((t) => t.done).length;
-    const start = planned.length ? planned[0].date : today;
-    const span = Math.max(1, Math.round((parseDate(s.examDate) - parseDate(start)) / 86400000));
-    const todayPos = Math.min(100, Math.max(0, Math.round(((parseDate(today) - parseDate(start)) / 86400000 / span) * 100)));
-    const taskPct = planned.length ? Math.round((done / planned.length) * 100) : 0;
-    const days = daysUntil(s.examDate);
+  // ---------------------------------------------------------------------------
+  // Sheets
+  // ---------------------------------------------------------------------------
 
-    return `
-      <section class="card plan-overview" aria-label="Progress toward the exam">
-        <div class="plan-overview-head">
-          <div>
-            <p class="plan-exam">${examLabel(s.examDate)}</p>
-            <p class="muted">${formatDate(s.examDate)}${days > 0 ? ` · ${days} ${days === 1 ? "day" : "days"} to go` : ""}</p>
+  function openHowItWorks() {
+    openModal({
+      title: "How your study plan works",
+      body: `
+        <ul class="how-list">
+          <li><strong>Mode</strong> sets how much to cover. Cram keeps only the highest-priority topics; Comprehensive covers everything.</li>
+          <li><strong>Sort</strong> orders topics inside each unit. Recommended puts what you've started first, then your weakest topics.</li>
+          <li><strong>Knowledge checks</strong> are short quizzes on a whole unit. Take one to see what you already know.</li>
+          <li>Each topic's circle fills as you go: empty when not started, half when in progress, a tick when covered (75% mastery).</li>
+        </ul>
+        <div class="modal-actions"><button type="button" class="btn btn-primary" data-modal-close autofocus>Got it</button></div>`,
+    });
+  }
+
+  function openPlanSettings(s) {
+    const modal = openModal({
+      title: "Plan settings",
+      body: `
+        <form>
+          <div class="field">
+            <label class="field-label" for="plan-exam">Exam date</label>
+            <input class="input" id="plan-exam" name="examDate" type="date" value="${s.examDate || ""}" min="${addDays(todayISO(), 1)}" aria-describedby="plan-exam-hint">
+            <p class="field-hint" id="plan-exam-hint">Your daily goals on Home are planned from today up to this date.</p>
           </div>
-          ${editingDate ? `
-            <form class="plan-date-form" data-date-form>
-              <label class="visually-hidden" for="change-date">New exam date</label>
-              <input class="input" type="date" id="change-date" name="examDate" value="${s.examDate}" min="${addDays(today, 1)}" required>
-              <button type="submit" class="btn btn-primary btn-sm">Save</button>
-              <button type="button" class="btn btn-ghost btn-sm" data-cancel-date>Cancel</button>
-            </form>` : '<button type="button" class="btn btn-secondary btn-sm" data-edit-date>Change exam date</button>'}
-        </div>
-
-        <div class="journey" aria-hidden="true">
-          <div class="journey-track"><div class="journey-fill" style="width: ${todayPos}%"></div></div>
-          <span class="journey-marker" style="left: ${todayPos}%"><span>Today</span></span>
-          <span class="journey-end">${icon("test")}</span>
-        </div>
-        <div class="journey-labels muted">
-          <span>${formatDate(start)}</span>
-          <span>Exam</span>
-        </div>
-
-        <p class="plan-done-line"><strong>${done} of ${planned.length}</strong> tasks done (${taskPct}%)</p>
-      </section>`;
-  }
-
-  function rebuildBannerHtml() {
-    return `
-      <div class="plan-banner" role="status">
-        <span>${icon("calendar")}Your exam date changed. Rebuild the plan to fit the new date.</span>
-        <button type="button" class="btn btn-primary btn-sm" data-rebuild>Rebuild plan</button>
-      </div>`;
-  }
-
-  function daysHtml(s) {
-    const today = todayISO();
-    const total = daysUntil(s.examDate);
-    const overdue = s.studyPlan.filter((t) => t.date < today && !t.done);
-
-    const catchUp = overdue.length ? `
-      <section class="card plan-day is-overdue" aria-labelledby="catchup-title">
-        <h2 class="plan-day-title" id="catchup-title">Catch up <span class="muted">${overdue.length} from earlier</span></h2>
-        <ul class="plan-tasks">${overdue.map(taskHtml).join("")}</ul>
-      </section>` : "";
-
-    const days = [];
-    for (let i = 0; i <= total; i++) {
-      const iso = addDays(today, i);
-      const tasks = s.studyPlan.filter((t) => t.date === iso);
-      const isExam = iso === s.examDate;
-      const label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : parseDate(iso).toLocaleDateString("en-IN", { weekday: "long" });
-      const doneCount = tasks.filter((t) => t.done).length;
-
-      let body;
-      if (isExam) body = `<p class="plan-exam-day">${icon("test")}Exam day. You've got this.</p>`;
-      else if (tasks.length) body = `<ul class="plan-tasks">${tasks.map(taskHtml).join("")}</ul>`;
-      else body = '<p class="muted plan-rest">No tasks planned.</p>';
-
-      days.push(`
-        <section class="card plan-day${i === 0 ? " is-today" : ""}${isExam ? " is-exam" : ""}" aria-label="${label}, ${formatDate(iso)}">
-          <h2 class="plan-day-title">
-            ${label} <span class="muted">${formatDate(iso)}</span>
-            ${tasks.length && !isExam ? `<span class="plan-day-count${doneCount === tasks.length ? " is-complete" : ""}">${doneCount}/${tasks.length}</span>` : ""}
-          </h2>
-          ${body}
-        </section>`);
-    }
-    return `${catchUp}${days.join("")}`;
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+            <button type="submit" class="btn btn-primary">Save and rebuild</button>
+          </div>
+        </form>`,
+    });
+    const form = modal.dialog.querySelector("form");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      setExamDate(s.id, form.elements.examDate.value || null);
+      buildStudyPlan(s.id);
+      modal.close();
+      render();
+      showToast("Plan rebuilt for your exam date");
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -139,61 +196,77 @@
     }
     const s = set();
     document.title = `Study plan · ${s.name} · SkipXam`;
-
-    let body;
-    if (!s.examDate) body = askForDateHtml(s, false);
-    else if (daysUntil(s.examDate) < 0) body = askForDateHtml(s, true);
-    else {
-      body = `
-        ${progressHtml(s)}
-        ${s.planExamDate !== s.examDate ? rebuildBannerHtml() : ""}
-        <div class="plan-days">${daysHtml(s)}</div>`;
-    }
-    main.innerHTML = `${toolHeaderHtml(s, "Study plan")}<div class="plan-body">${body}</div>`;
+    const body = s.topics.length
+      ? `${customizeHtml(s)}<div class="timeline-wrap">${timelineHtml(s)}</div>`
+      : emptyStateHtml({
+          title: "No study plan yet",
+          text: "Your plan is built from the topics in your notes. Upload notes to this set first.",
+          action: { label: "Upload notes", href: `set.html?set=${encodeURIComponent(s.id)}&upload=1` },
+        });
+    main.innerHTML = `${headerHtml(s)}<div class="plan-body">${body}</div>`;
   }
 
-  main.addEventListener("change", (event) => {
-    const box = event.target.closest("[data-task]");
-    if (!box) return;
-    setTaskDone(initialSet.id, box.dataset.task, box.checked);
-    const scrollY = window.scrollY;
-    render();
-    window.scrollTo(0, scrollY);
-    const same = main.querySelector(`[data-task="${box.dataset.task}"]`);
-    if (same) same.focus({ preventScroll: true });
-  });
+  function renderTimeline() {
+    main.querySelector(".timeline-wrap").innerHTML = timelineHtml(set());
+  }
 
-  main.addEventListener("submit", (event) => {
-    const form = event.target.closest("[data-date-form]");
-    if (!form) return;
-    event.preventDefault();
-    const value = form.elements.examDate.value;
-    if (!value) return;
-    const s = set();
-    const isFirstPlan = !s.examDate || daysUntil(s.examDate) < 0;
-    setExamDate(s.id, value);
-    editingDate = false;
-    if (isFirstPlan) {
-      buildStudyPlan(s.id);
-      showToast("Your study plan is ready");
-    } else {
-      showToast("Exam date updated");
-    }
+  main.addEventListener("menuselect", (event) => {
+    const { name, value } = event.detail;
+    setPlanOptions(initialSet.id, name === "mode" ? { mode: value } : { sort: value });
     render();
+    main.querySelector(`[data-menu-select="${name}"] .menu-select-btn`).focus();
   });
 
   main.addEventListener("click", (event) => {
-    if (event.target.closest("[data-edit-date]")) {
-      editingDate = true;
-      render();
-      main.querySelector("#change-date").focus();
-    } else if (event.target.closest("[data-cancel-date]")) {
-      editingDate = false;
-      render();
-    } else if (event.target.closest("[data-rebuild]")) {
-      buildStudyPlan(initialSet.id);
-      render();
-      showToast("Plan rebuilt for your new exam date");
+    const t = event.target;
+    const unitBtn = t.closest("[data-unit]");
+    if (unitBtn) {
+      const id = unitBtn.dataset.unit;
+      if (state.collapsed.has(id)) state.collapsed.delete(id); else state.collapsed.add(id);
+      const open = !state.collapsed.has(id);
+      unitBtn.setAttribute("aria-expanded", String(open));
+      document.getElementById(`unit-${id}`).hidden = !open;
+      return;
+    }
+    if (t.closest("[data-filter]")) {
+      state.filterOpen = !state.filterOpen;
+      const btn = t.closest("[data-filter]");
+      btn.setAttribute("aria-expanded", String(state.filterOpen));
+      main.querySelector("#status-filter").hidden = !state.filterOpen;
+      if (state.filterOpen) main.querySelector("#status-filter input").focus();
+      return;
+    }
+    if (t.closest("[data-plan-settings]")) return openPlanSettings(set());
+    if (t.closest("[data-how]")) return openHowItWorks();
+    if (t.closest("[data-dismiss-how]")) {
+      dismissHint("planHowItWorks");
+      main.querySelector(".how-it-works").remove();
+      return;
+    }
+    // Click outside the filter popover closes it.
+    if (state.filterOpen && !t.closest(".filter-wrap")) {
+      state.filterOpen = false;
+      main.querySelector("[data-filter]").setAttribute("aria-expanded", "false");
+      main.querySelector("#status-filter").hidden = true;
+    }
+  });
+
+  main.addEventListener("change", (event) => {
+    const box = event.target.closest("[data-status]");
+    if (!box) return;
+    if (box.checked) state.statuses.add(box.dataset.status);
+    else state.statuses.delete(box.dataset.status);
+    main.querySelector("[data-filter]").classList.toggle("is-active", state.statuses.size < 3);
+    renderTimeline();
+  });
+
+  main.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.filterOpen) {
+      state.filterOpen = false;
+      main.querySelector("#status-filter").hidden = true;
+      const btn = main.querySelector("[data-filter]");
+      btn.setAttribute("aria-expanded", "false");
+      btn.focus();
     }
   });
 

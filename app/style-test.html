@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Style test · SkipXam</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/app.css">
+  <style>
+    /* Layout for this review page only. */
+    .st-page { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-6); padding-bottom: var(--space-7); }
+    .st-page > header p { margin-top: var(--space-2); max-width: 64ch; }
+    .st-section h2 { font-size: var(--text-lg); margin-bottom: var(--space-1); }
+    .st-section > .muted { font-size: var(--text-sm); margin-bottom: var(--space-4); }
+    .st-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); }
+    .st-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+    .st-shadow { display: grid; place-items: center; height: 120px; border-radius: var(--radius-lg); background: var(--color-surface); border: 1px solid var(--color-border); font-weight: var(--weight-semibold); }
+    .st-shadow code { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .st-card { display: flex; flex-direction: column; gap: var(--space-4); }
+    .st-stage { padding: var(--space-6) var(--space-4); border-radius: var(--radius-lg); border: 1px dashed var(--color-border); display: grid; place-items: center; min-height: 420px; }
+    .st-glass { width: min(420px, 100%); padding: var(--space-5); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: var(--space-3); }
+    .st-glass .menu-demo { position: static; display: block; margin-top: var(--space-2); }
+    .st-swatch { height: 96px; border-radius: var(--radius-lg); display: flex; align-items: flex-end; padding: var(--space-3); font-size: var(--text-sm); font-weight: var(--weight-bold); box-shadow: var(--shadow-md); }
+    .st-swatch.amber { background: var(--gradient-amber); color: var(--color-on-accent); }
+    .st-swatch.ember { background: var(--gradient-ember); }
+    .st-big { padding: var(--space-4) var(--space-6); font-size: var(--text-lg); }
+    .st-pricing { max-width: 360px; }
+    .st-pricing .pricing-card { margin-top: 0; }
+    .st-pricing ul { display: flex; flex-direction: column; gap: var(--space-1); margin: var(--space-3) 0 var(--space-4); font-size: var(--text-sm); }
+  </style>
+</head>
+<body>
+  <main class="container st-page">
+    <header>
+      <h1>Visual effects</h1>
+      <p class="muted">Review page for the shadow, glass, dot grid, orb and gradient system. The dot grid is the page background behind this content; the top bar (and the tab bar on mobile) are glass.</p>
+    </header>
+
+    <section class="st-section" aria-labelledby="st-shadows">
+      <h2 id="st-shadows">1. Shadows</h2>
+      <p class="muted">Two layers each (tight + wide) plus a faint top highlight.</p>
+      <div class="st-grid">
+        <div class="st-shadow" style="box-shadow: var(--shadow-sm)"><span>Small <code>--shadow-sm</code></span></div>
+        <div class="st-shadow" style="box-shadow: var(--shadow-md)"><span>Medium <code>--shadow-md</code></span></div>
+        <div class="st-shadow" style="box-shadow: var(--shadow-lg)"><span>Large <code>--shadow-lg</code></span></div>
+      </div>
+    </section>
+
+    <section class="st-section" aria-labelledby="st-card">
+      <h2 id="st-card">2. Card and controls</h2>
+      <p class="muted">A regular card (medium shadow) with buttons, chips and an input (small shadow).</p>
+      <div class="card st-card">
+        <div class="st-row">
+          <h3>Java Programming</h3>
+          <span class="badge badge-pro">Pro</span>
+          <span class="lock-badge">Pro</span>
+        </div>
+        <div class="progress" role="progressbar" aria-label="Example progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="58"><div class="progress-fill" style="width: 58%"></div></div>
+        <div class="st-row">
+          <button type="button" class="btn btn-primary">Primary</button>
+          <button type="button" class="btn btn-secondary">Secondary</button>
+          <button type="button" class="btn btn-danger">Danger</button>
+          <button type="button" class="btn btn-ghost">Ghost</button>
+          <button type="button" class="btn btn-primary" disabled>Disabled</button>
+        </div>
+        <div class="chips">
+          <button type="button" class="chip">OOP</button>
+          <button type="button" class="chip">Exceptions</button>
+          <button type="button" class="chip">Collections</button>
+        </div>
+        <label class="field-label" for="st-input">Input</label>
+        <input class="input" id="st-input" type="text" placeholder="Type to see the focus ring">
+      </div>
+    </section>
+
+    <section class="st-section" aria-labelledby="st-glass">
+      <h2 id="st-glass">3. Glass panel over orbs</h2>
+      <p class="muted">Two orbs (amber and ember) drifting slowly behind a glass panel. They stop moving with reduced motion.</p>
+      <div class="st-stage has-orbs">
+        <div class="orb-layer" aria-hidden="true"><span class="orb orb-amber"></span><span class="orb orb-ember"></span></div>
+        <div class="glass st-glass">
+          <strong>Glass panel</strong>
+          <p class="muted">Semi-transparent background, 20px blur, light border and a brighter top edge. Browsers without backdrop-filter get a solid panel instead.</p>
+          <ul class="menu-select-list glass menu-demo" role="listbox" aria-label="Dropdown example">
+            <li role="option" aria-selected="true" tabindex="0">Standard <span class="muted">· a dropdown, also glass</span></li>
+            <li role="option" aria-selected="false" tabindex="-1">Cram</li>
+            <li role="option" aria-selected="false" tabindex="-1">Comprehensive</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="st-section" aria-labelledby="st-gradients">
+      <h2 id="st-gradients">4. Hard-stop gradients</h2>
+      <p class="muted">Amber is for primary buttons, Pro badges, progress bars and the pricing header (dark text: 7.2:1 and 5.4:1). Ember is for the featured card border only: no text colour passes on both its ends.</p>
+      <div class="st-grid">
+        <div class="st-swatch amber">--gradient-amber · text 7.2:1 / 5.4:1</div>
+        <div class="st-swatch ember" aria-label="Ember gradient, decoration only"></div>
+      </div>
+      <div class="st-row" style="margin-top: var(--space-4)">
+        <button type="button" class="btn btn-primary st-big">Gradient button</button>
+        <button type="button" class="btn btn-secondary" data-open-modal>Open a glass modal</button>
+        <button type="button" class="btn btn-secondary" data-open-pricing>Open the pricing sheet</button>
+      </div>
+    </section>
+
+    <section class="st-section" aria-labelledby="st-pricing">
+      <h2 id="st-pricing">5. Featured pricing card</h2>
+      <p class="muted">Glass card, ember border, amber header. The same card is inside the upgrade sheet.</p>
+      <div class="st-pricing">
+        <div class="pricing-card is-featured glass">
+          <p class="pricing-card-head">SkipXam Pro</p>
+          <div class="pricing-card-body">
+            <p class="price"><span class="price-amount">₹99</span> / month</p>
+            <ul class="muted">
+              <li>Unlimited study sets</li>
+              <li>Tutor, practice tests, visual memory</li>
+              <li>Record lectures</li>
+            </ul>
+            <button type="button" class="btn btn-primary btn-block">Upgrade to Pro</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("[data-open-pricing]")) {
+        openUpgrade();
+      }
+      if (event.target.closest("[data-open-modal]")) {
+        openModal({
+          title: "Glass modal",
+          body: `<p class="muted">Modals and bottom sheets use the glass surface. On mobile this opens as a bottom sheet.</p>
+                 <div class="modal-actions"><button type="button" class="btn btn-primary" data-modal-close autofocus>Close</button></div>`,
+        });
+      }
+    });
+  </script>
+</body>
+</html>

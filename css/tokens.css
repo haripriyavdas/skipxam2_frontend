@@ -59,9 +59,72 @@
   --radius-sm: 8px;   /* buttons, inputs, chips */
   --radius-lg: 16px;  /* cards, panels */
 
+  /* ---------- Shadows ----------
+     On a dark background shadows need to be darker and wider than usual.
+     Each level: a faint 1px top highlight (lifts the surface), a tight dark
+     shadow, and a wide soft one. */
+  --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-sm: var(--shadow-highlight), 0 1px 2px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);   /* buttons, chips, inputs */
+  --shadow-md: var(--shadow-highlight), 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.45);  /* cards */
+  --shadow-lg: var(--shadow-highlight), 0 2px 6px rgba(0, 0, 0, 0.55), 0 24px 64px rgba(0, 0, 0, 0.6); /* modals, sheets, dropdowns, floating panels */
+  --shadow-raised: var(--shadow-lg); /* older name, kept for existing rules */
+
+  /* ---------- Liquid glass ---------- */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-fallback: rgba(34, 31, 28, 0.97); /* solid, for browsers without backdrop-filter */
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --glass-blur: blur(20px) saturate(160%);
+  --glass-tint-bar: rgba(15, 14, 13, 0.72);   /* under the top bar and tab bar */
+  --glass-tint-panel: rgba(24, 22, 20, 0.78); /* under modals and dropdowns */
+  --dot-color: rgba(240, 234, 224, 0.08);     /* dot-grid background */
+
+  /* ---------- Hard-stop gradients ----------
+     Text contrast checked against the darkest/lightest stop it can sit on:
+     --gradient-amber with --color-on-accent text: 7.2:1 on #E08A38, 5.4:1 on #EA580C (AA).
+     --gradient-ember is for borders and decoration only: no text stop works on
+     both its amber and wine ends, so never put text directly on it. */
+  --gradient-amber: linear-gradient(135deg, #e08a38 0%, #e08a38 50%, #ea580c 50%, #ea580c 100%);
+  --gradient-amber-hover: linear-gradient(135deg, #eb9a4e 0%, #eb9a4e 50%, #f06a22 50%, #f06a22 100%);
+  --gradient-ember: linear-gradient(135deg, #e08a38 0%, #e08a38 45%, #c2410c 45%, #9f1239 100%);
+
+  /* ---------- Orbs (blurred background glows) ---------- */
+  --orb-amber: #e08a38;
+  --orb-ember: #be123c; /* deep red-magenta that pairs with amber */
+
   /* ---------- Misc ---------- */
-  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.4);
   --transition-fast: 0.15s ease;
   --nav-height: 64px;
   --max-width: 1200px;
+}
+
+/* ---------- Light theme (Profile > Settings > Theme) ----------
+   Same structure, lighter surfaces. Amber text/icons use a darker shade so
+   they stay readable on white (5.1:1); gradients keep dark text. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f6f2eb;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f0e9df;
+  --color-border: #e0d6c8;
+  --color-text: #1c1916;
+  --color-text-muted: #675e54;
+  --color-accent: #a8590f;
+  --color-accent-hover: #8c4a0c;
+  --color-accent-soft: rgba(224, 138, 56, 0.16);
+  --color-success: #2f7d48;
+  --color-danger: #c0392b;
+
+  --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --shadow-sm: var(--shadow-highlight), 0 1px 2px rgba(60, 40, 20, 0.12), 0 2px 6px rgba(60, 40, 20, 0.08);
+  --shadow-md: var(--shadow-highlight), 0 1px 2px rgba(60, 40, 20, 0.1), 0 8px 24px rgba(60, 40, 20, 0.1);
+  --shadow-lg: var(--shadow-highlight), 0 2px 6px rgba(60, 40, 20, 0.12), 0 24px 64px rgba(60, 40, 20, 0.18);
+
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-fallback: rgba(255, 255, 255, 0.97);
+  --glass-border: rgba(60, 40, 20, 0.12);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-tint-bar: rgba(246, 242, 235, 0.7);
+  --glass-tint-panel: rgba(255, 255, 255, 0.75);
+  --dot-color: rgba(28, 25, 22, 0.1);
 }

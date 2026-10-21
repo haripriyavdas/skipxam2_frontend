@@ -155,7 +155,7 @@
   }
 
   function startTest() {
-    if (getUser().plan !== "pro") {
+    if (getUser().plan === "free") {
       openUpgrade("Practice tests");
       return;
     }
@@ -390,6 +390,7 @@
       possible: sections.reduce((n, s) => n + s.possible, 0),
       minutesUsed: Math.max(1, Math.round((Date.now() - state.startedAt) / 60000)),
     };
+    logActivity(initialSet.id, "test", `Took a practice test in ${initialSet.name}, ${fmtMarks(state.result.earned)}/${state.result.possible}`);
     state.screen = "results";
     render();
     window.scrollTo(0, 0);
@@ -517,7 +518,7 @@
       main.innerHTML = examHtml(s);
       return;
     }
-    const proBadge = getUser().plan === "free" ? '<span class="badge">Pro</span>' : "";
+    const proBadge = getUser().plan === "free" ? '<span class="badge badge-pro">Pro</span>' : "";
     if (state.screen === "setup" && s.quiz.length === 0) {
       main.innerHTML = `${toolHeaderHtml(s, `Practice test ${proBadge}`)}${emptyStateHtml({
         title: "No questions yet", text: "Practice tests are built from your notes. Upload notes to this set first.",
