@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<!--
+  Source for assets/sample.pdf: mock lecture notes for the Java demo set.
+  The source stars on the notes page (js/notes-content.js) quote sentences from
+  this file, so keep those sentences word for word if you edit it.
+
+  Rebuild the PDF (Windows, from the repo root):
+    "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --no-pdf-header-footer ^
+      --print-to-pdf="%CD%\assets\sample.pdf" "file:///%CD:\=/%/assets/sample-pdf-source.html"
+    python assets/make-sample-pdf-js.py
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Object Oriented Programming with Java: Units 1 and 2</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.42; color: #111; font-variant-ligatures: none; }
+  .page { break-after: page; }
+  .page:last-child { break-after: auto; }
+  .running { font-size: 8.5pt; color: #666; border-bottom: 1px solid #bbb; padding-bottom: 4px; margin-bottom: 14px; }
+  h1 { font-size: 20pt; margin: 0 0 4px; }
+  h2 { font-size: 15pt; margin: 18px 0 8px; color: #0b3d6b; }
+  h3 { font-size: 12pt; margin: 14px 0 6px; }
+  p { margin: 0 0 8px; text-align: justify; }
+  ul, ol { margin: 0 0 8px 18px; padding: 0; }
+  li { margin-bottom: 3px; }
+  pre { font-family: "Courier New", monospace; font-size: 9.5pt; background: #f3f3f3; border: 1px solid #ccc; padding: 8px; margin: 6px 0 10px; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 10pt; }
+  th, td { border: 1px solid #999; padding: 2px 6px; text-align: left; vertical-align: top; }
+  th { background: #e8eef5; }
+  .box { border: 1px solid #0b3d6b; background: #eef4fa; padding: 6px 10px; margin: 8px 0; }
+  .sub { color: #444; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 1</div>
+  <h1>Object Oriented Programming with Java</h1>
+  <p class="sub">Lecture notes for Units 1 and 2: language basics, OOP, strings, exceptions, collections and multithreading.</p>
+
+  <h2>1. Introduction to Java</h2>
+  <p>Java is a high-level, class-based, object oriented programming language. It was designed to have as few implementation dependencies as possible, so that developers can write a program once and run it on any device that has a Java Virtual Machine (JVM).</p>
+  <h3>1.1 Features of Java</h3>
+  <ul>
+    <li><b>Simple and familiar:</b> syntax similar to C and C++, without pointers or operator overloading.</li>
+    <li><b>Object oriented:</b> everything except the primitive types is an object.</li>
+    <li><b>Platform independent:</b> source code is compiled into bytecode, not machine code.</li>
+    <li><b>Robust:</b> strong type checking, automatic garbage collection and exception handling.</li>
+    <li><b>Secure:</b> no explicit pointers, and bytecode is verified before it runs.</li>
+    <li><b>Multithreaded:</b> threads are built into the language and the standard library.</li>
+  </ul>
+  <h3>1.2 How a Java program runs</h3>
+  <p>The compiler, javac, translates a .java source file into a .class file that contains bytecode. The JVM does not understand Java source code; it executes bytecode, which is why the same .class file runs on every platform that has a JVM. Inside the JVM, the class loader loads classes, the bytecode verifier checks them, and the execution engine runs them. The Just-In-Time (JIT) compiler translates frequently executed bytecode into native machine code to improve performance.</p>
+  <h3>1.3 JDK, JRE and JVM</h3>
+  <div class="box">JDK = JRE + development tools (javac, java, javadoc, jdb). JRE = JVM + core class libraries.</div>
+  <p>Only the JVM is platform specific. A developer installs the JDK; a user who only runs programs needs the JRE.</p>
+  <h3>1.4 JVM memory areas</h3>
+  <p>The method area stores class-level data such as static variables and method code. The heap stores all objects and is shared by every thread. Each thread has its own stack, which holds a frame for every method call, including its local variables. Garbage collection reclaims heap memory used by objects that are no longer reachable from any live reference.</p>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 2</div>
+  <h2>2. Data Types, Classes and Objects</h2>
+  <h3>2.1 Primitive data types</h3>
+  <table>
+    <tr><th>Type</th><th>Size</th><th>Range or values</th><th>Default</th></tr>
+    <tr><td>byte</td><td>8 bits</td><td>-128 to 127</td><td>0</td></tr>
+    <tr><td>short</td><td>16 bits</td><td>-32,768 to 32,767</td><td>0</td></tr>
+    <tr><td>int</td><td>32 bits</td><td>-2^31 to 2^31 - 1</td><td>0</td></tr>
+    <tr><td>long</td><td>64 bits</td><td>-2^63 to 2^63 - 1</td><td>0L</td></tr>
+    <tr><td>float</td><td>32 bits</td><td>about 7 decimal digits</td><td>0.0f</td></tr>
+    <tr><td>double</td><td>64 bits</td><td>about 15 decimal digits</td><td>0.0d</td></tr>
+    <tr><td>char</td><td>16 bits</td><td>Unicode characters</td><td>'\u0000'</td></tr>
+    <tr><td>boolean</td><td>JVM dependent</td><td>true or false</td><td>false</td></tr>
+  </table>
+  <p>In general, an n-bit signed integer type can hold values from -2^(n-1) to 2^(n-1) - 1. Local variables are not given default values and must be initialised before use; instance variables get default values (0, false or null).</p>
+  <h3>2.2 Classes and objects</h3>
+  <p>A class is a blueprint that defines the fields (state) and methods (behaviour) of its objects. An object is an instance of a class, created at run time with the new keyword, which allocates memory on the heap and calls a constructor.</p>
+  <pre>class Student {
+    private String name;
+    private int marks;
+
+    Student(String name, int marks) {   // parameterised constructor
+        this.name = name;
+        this.marks = marks;
+    }
+}
+Student s = new Student("Asha", 87);</pre>
+  <h3>2.3 Constructors</h3>
+  <p>A constructor has the same name as its class and no return type, not even void. It runs once, when the object is created. If a class defines any constructor, the compiler no longer provides the default constructor. Constructors can be overloaded, and one constructor can call another with this(...), which must be the first statement.</p>
+  <h3>2.4 The static keyword</h3>
+  <p>A static field belongs to the class and is shared by all objects. A static method can be called without creating an object and cannot use this or access instance members directly. A static block runs once, when the class is loaded.</p>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 3</div>
+  <h2>3. Object Oriented Programming Concepts</h2>
+  <h3>3.1 Encapsulation</h3>
+  <p>Encapsulation binds data and the methods that operate on it into a single unit and hides the data from outside access. Fields are declared private and are read or changed only through public getter and setter methods, which can validate the values.</p>
+  <h3>3.2 Inheritance</h3>
+  <p>Inheritance lets a subclass acquire the fields and methods of a superclass using the extends keyword, which models an "is-a" relationship. The super keyword calls the superclass constructor or an overridden superclass method. Java does not support multiple inheritance of classes, but a class can implement any number of interfaces.</p>
+  <p>Types of inheritance supported with classes: single, multilevel and hierarchical.</p>
+  <h3>3.3 Polymorphism</h3>
+  <p>Polymorphism means one name, many forms. Method overloading defines several methods with the same name but different parameter lists in the same class. Method overriding redefines an inherited method in a subclass with the same signature. Overloading is resolved at compile time from the argument types, whereas overriding is resolved at run time by dynamic method dispatch.</p>
+  <pre>Animal a = new Dog();   // superclass reference, subclass object
+a.sound();              // calls Dog.sound() at run time</pre>
+  <h3>3.4 Abstraction</h3>
+  <p>Abstraction shows only the essential features of an object and hides the implementation. An abstract class may contain abstract and concrete methods and cannot be instantiated. An interface declares methods that implementing classes must provide.</p>
+  <table>
+    <tr><th>Abstract class</th><th>Interface</th></tr>
+    <tr><td>Can have abstract and concrete methods</td><td>Abstract methods, plus default and static methods since Java 8</td></tr>
+    <tr><td>Can have instance variables and constructors</td><td>Only public static final constants; no constructors</td></tr>
+    <tr><td>A class extends only one abstract class</td><td>A class can implement many interfaces</td></tr>
+    <tr><td>Members can have any access modifier</td><td>Methods are public by default</td></tr>
+  </table>
+  <h3>3.5 The final keyword</h3>
+  <p>A final variable cannot be reassigned, a final method cannot be overridden and a final class cannot be extended.</p>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 4</div>
+  <h2>4. Strings and StringBuilder</h2>
+  <p>A String in Java is an object of the class java.lang.String that represents a sequence of characters. String objects are immutable: every method that appears to modify a String returns a new String object. Immutability makes strings safe to share between threads and allows the JVM to cache them.</p>
+  <h3>4.1 The string constant pool</h3>
+  <p>String literals are stored in a special area of the heap called the string constant pool. When the same literal appears twice, both references point to the single pooled object. Creating a string with new String("Java") always creates a new object outside the pool.</p>
+  <pre>String a = "Java";
+String b = "Java";
+String c = new String("Java");
+a == b        // true: same pooled object
+a == c        // false: different objects
+a.equals(c)   // true: same characters</pre>
+  <p>Use equals() to compare the contents of two strings; == only checks whether two references point to the same object.</p>
+  <h3>4.2 Common String methods</h3>
+  <table>
+    <tr><th>Method</th><th>Returns</th></tr>
+    <tr><td>length()</td><td>Number of characters</td></tr>
+    <tr><td>charAt(i)</td><td>Character at index i</td></tr>
+    <tr><td>substring(b, e)</td><td>Characters from index b up to, but not including, e</td></tr>
+    <tr><td>indexOf(s)</td><td>First index of s, or -1</td></tr>
+    <tr><td>toUpperCase(), trim()</td><td>A new, changed String</td></tr>
+  </table>
+  <h3>4.3 StringBuilder and StringBuffer</h3>
+  <p>StringBuilder is a mutable sequence of characters. Its append(), insert(), reverse() and delete() methods change the same object, so building a string in a loop does not create a new object on each pass. StringBuffer offers the same methods but is synchronized, which makes it thread safe and slower.</p>
+  <p>String concatenation is evaluated from left to right: once one operand is a String, + means concatenation, so "5" + 3 + 2 gives "532" while 3 + 2 + "5" gives "55".</p>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 5</div>
+  <h2>5. Exception Handling</h2>
+  <p>An exception is an event that disrupts the normal flow of a program at run time. Every exception class is a subclass of Throwable, which has two branches: Error, for serious problems that a program should not try to catch (for example OutOfMemoryError), and Exception, for conditions that a program can handle.</p>
+  <h3>5.1 Checked and unchecked exceptions</h3>
+  <p>Checked exceptions are checked by the compiler and must be either caught or declared with throws; unchecked exceptions are subclasses of RuntimeException. Examples of checked exceptions are IOException and SQLException. Examples of unchecked exceptions are NullPointerException, ArithmeticException and ArrayIndexOutOfBoundsException.</p>
+  <h3>5.2 try, catch and finally</h3>
+  <pre>try {
+    int result = 10 / 0;              // throws ArithmeticException
+} catch (ArithmeticException e) {
+    System.out.println("Cannot divide by zero");
+} finally {
+    System.out.println("Clean-up code");
+}</pre>
+  <p>A try block can be followed by several catch blocks; they are checked in order, so a subclass exception must be caught before its superclass. The finally block always executes, whether or not an exception is thrown, unless the JVM exits first by calling System.exit().</p>
+  <h3>5.3 throw and throws</h3>
+  <p>The throw statement raises an exception object explicitly, for example throw new IllegalArgumentException("Age must be positive"). The throws clause in a method signature declares the checked exceptions that the method may pass to its caller.</p>
+  <h3>5.4 User-defined exceptions</h3>
+  <p>A custom checked exception extends Exception; a custom unchecked exception extends RuntimeException. The constructor usually passes a message to super(message).</p>
+  <pre>class InsufficientBalanceException extends Exception {
+    InsufficientBalanceException(String msg) { super(msg); }
+}</pre>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 6</div>
+  <h2>6. Collections Framework</h2>
+  <p>The Java Collections Framework is a set of interfaces and classes in java.util for storing and processing groups of objects. The main interfaces are List, Set, Queue and Map. Map is part of the framework but does not extend the Collection interface.</p>
+  <table>
+    <tr><th>Interface</th><th>Ordering</th><th>Duplicates</th><th>Common classes</th></tr>
+    <tr><td>List</td><td>Insertion order, index based</td><td>Allowed</td><td>ArrayList, LinkedList, Vector</td></tr>
+    <tr><td>Set</td><td>None (HashSet), sorted (TreeSet)</td><td>Not allowed</td><td>HashSet, LinkedHashSet, TreeSet</td></tr>
+    <tr><td>Queue</td><td>FIFO or priority</td><td>Allowed</td><td>PriorityQueue, ArrayDeque</td></tr>
+    <tr><td>Map</td><td>None (HashMap), sorted keys (TreeMap)</td><td>Unique keys</td><td>HashMap, LinkedHashMap, TreeMap</td></tr>
+  </table>
+  <h3>6.1 ArrayList and LinkedList</h3>
+  <p>ArrayList is backed by a resizable array, so get(i) is O(1) but inserting in the middle is O(n). LinkedList is a doubly linked list, so adding or removing at either end is O(1) but get(i) is O(n).</p>
+  <h3>6.2 HashMap</h3>
+  <p>A HashMap stores key-value pairs in an array of buckets. The bucket for a key is chosen from its hashCode(), and equals() is used to find the key inside the bucket. A HashMap allows one null key and any number of null values, does not maintain insertion order and is not synchronized.</p>
+  <div class="box">Resize threshold = capacity × load factor. Default capacity 16 and load factor 0.75 give a threshold of 12 entries.</div>
+  <p>When the number of entries exceeds capacity × load factor, the HashMap doubles its capacity and rehashes every entry.</p>
+  <h3>6.3 Iterating over a collection</h3>
+  <pre>List&lt;String&gt; names = new ArrayList&lt;&gt;();
+names.add("Ravi");
+names.add("Meera");
+for (String n : names) {
+    System.out.println(n);
+}</pre>
+  <p>Modifying a collection while iterating over it with a for-each loop throws ConcurrentModificationException; use the Iterator's remove() method instead.</p>
+</section>
+
+<section class="page">
+  <div class="running">Object Oriented Programming with Java · Lecture notes, Units 1 and 2 · Page 7</div>
+  <h2>7. Multithreading</h2>
+  <p>A thread is a lightweight unit of execution within a process. Threads of the same process share the heap but each has its own stack. Multithreading lets a program perform several tasks at the same time and keeps it responsive.</p>
+  <h3>7.1 Creating threads</h3>
+  <p>There are two ways to create a thread: extend the Thread class and override run(), or implement the Runnable interface and pass the object to a Thread constructor. Implementing Runnable is preferred because the class can still extend another class.</p>
+  <pre>class Task implements Runnable {
+    public void run() { System.out.println("Running"); }
+}
+Thread t = new Thread(new Task());
+t.start();</pre>
+  <p>Calling run() directly executes the method on the current thread; only start() creates a new thread of execution.</p>
+  <h3>7.2 Thread life cycle</h3>
+  <p>A thread moves through these states: New (created, not started), Runnable (ready or running), Blocked (waiting for a lock), Waiting or Timed Waiting (waiting for another thread or for a time limit, for example after sleep()), and Terminated (run() has finished).</p>
+  <h3>7.3 Synchronization</h3>
+  <p>When several threads update shared data at the same time, the result can depend on their timing; this is called a race condition. A synchronized method acquires the lock on the object, so only one thread at a time can execute any synchronized method of that object. A synchronized block locks only the statements that need protection.</p>
+  <h3>7.4 Useful Thread methods</h3>
+  <table>
+    <tr><th>Method</th><th>Purpose</th></tr>
+    <tr><td>sleep(ms)</td><td>Pauses the current thread; it keeps any locks it holds</td></tr>
+    <tr><td>join()</td><td>Waits for another thread to finish</td></tr>
+    <tr><td>wait() / notify()</td><td>Releases the lock and waits / wakes a waiting thread; called inside synchronized code</td></tr>
+    <tr><td>setPriority(n)</td><td>Sets priority from 1 (MIN) to 10 (MAX); default is 5</td></tr>
+  </table>
+</section>
+
+</body>
+</html>

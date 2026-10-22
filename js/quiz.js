@@ -2,6 +2,8 @@
  * Quiz (app/quiz.html?set=<id>[&topic=<topicId>]). Load after data.js and app.js.
  * Setup → one MCQ per screen with instant feedback → results (updates topic mastery).
  * With ?topic= the quiz starts straight away on that topic.
+ * Every finished quiz is saved to the set's history (saveQuizAttempt), listed
+ * under the quiz card with Review and Retake.
  */
 (function () {
   "use strict";
@@ -19,7 +21,10 @@
     index: 0,
     answers: [],                     // chosen option index per question
     changes: [],                     // mastery changes from applyTopicResults
+    startedAt: 0,
+    historyAll: false,               // show every past attempt, not just the latest
   };
+  const HISTORY_ROWS = 5;
 
   const set = () => getSet(initialSet.id);
 
@@ -41,6 +46,7 @@
     state.index = 0;
     state.answers = [];
     state.changes = [];
+    state.startedAt = Date.now();
     state.screen = "question";
     render();
   }
@@ -181,6 +187,12 @@
     state.changes = applyTopicResults(initialSet.id, results);
     const correct = state.questions.filter((q, i) => state.answers[i] === q.answer).length;
     logActivity(initialSet.id, "quiz", `Took a quiz in ${initialSet.name}, ${correct}/${state.questions.length}`);
+    saveQuizAttempt(initialSet.id, {
+      answers: state.questions.map((q, i) => ({ questionId: q.id, chosen: state.answers[i] })),
+      correct,
+      total: state.questions.length,
+      seconds: Math.round((Date.now() - state.startedAt) / 1000),
+    });
     recordQuizScore(Math.round((correct / state.questions.length) * 100));
     state.screen = "results";
     render();
@@ -285,6 +297,130 @@
   }
 
   // ---------------------------------------------------------------------------
+  // History
+  // ---------------------------------------------------------------------------
+
+  const pctOf = (a) => Math.round((a.correct / a.total) * 100);
+
+  function formatDuration(seconds) {
+    const m = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return m ? `${m}m ${String(sec).padStart(2, "0")}s` : `${sec}s`;
+  }
+
+  function attemptWhen(iso) {
+    const d = new Date(iso);
+    const time = d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+    return `${formatDate(toISODate(d))}, ${time}`;
+  }
+
+  function topicsLabel(s, ids) {
+    const names = ids.map((id) => topicName(s, id));
+    if (names.length <= 2) return names.map(escapeHtml).join(", ");
+    return `${names.slice(0, 2).map(escapeHtml).join(", ")} <span class="muted">+${names.length - 2} more</span>`;
+  }
+
+  function historyHtml(s) {
+    const history = s.quizHistory || [];
+    if (!history.length) {
+      return `
+        <section class="card quiz-history" aria-labelledby="history-title">
+          <h2 id="history-title" class="history-title">Your quiz history</h2>
+          <p class="muted">No quizzes yet. Every quiz you finish in this set is saved here so you can review or retake it.</p>
+        </section>`;
+    }
+    const best = Math.max(...history.map(pctOf));
+    const average = Math.round(history.reduce((n, a) => n + pctOf(a), 0) / history.length);
+    const shown = state.historyAll ? history : history.slice(0, HISTORY_ROWS);
+    const tier = (pct) => (pct >= 75 ? "is-good" : pct >= 50 ? "is-ok" : "is-low");
+
+    return `
+      <section class="card quiz-history" aria-labelledby="history-title">
+        <h2 id="history-title" class="history-title">Your quiz history</h2>
+        <dl class="history-stats">
+          <div><dt>Attempts</dt><dd>${history.length}</dd></div>
+          <div><dt>Best score</dt><dd>${best}%</dd></div>
+          <div><dt>Average score</dt><dd>${average}%</dd></div>
+        </dl>
+        <ul class="history-list">
+          ${shown.map((a) => `
+            <li class="history-row">
+              <div class="history-main">
+                <span class="history-date">${attemptWhen(a.at)}${a.source === "lesson" ? ' <span class="history-tag">Study plan lesson</span>' : ""}</span>
+                <span class="history-topics">${topicsLabel(s, a.topicIds)}</span>
+              </div>
+              <div class="history-meta">
+                <span class="history-score ${tier(pctOf(a))}"><strong>${a.correct}/${a.total}</strong> · ${pctOf(a)}%</span>
+                <span class="history-time muted">${icon("clock")}${formatDuration(a.seconds)}</span>
+              </div>
+              <div class="history-actions">
+                <button type="button" class="btn btn-ghost btn-sm" data-review="${a.id}">Review</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-retake="${a.id}">Retake</button>
+              </div>
+            </li>`).join("")}
+        </ul>
+        ${history.length > HISTORY_ROWS ? `
+          <button type="button" class="btn btn-ghost btn-sm history-more" data-history-all>
+            ${state.historyAll ? "Show fewer" : `Show all ${history.length} attempts`}
+          </button>` : ""}
+      </section>`;
+  }
+
+  function attemptQuestions(s, attempt) {
+    const byId = new Map(s.quiz.map((q) => [q.id, q]));
+    return attempt.answers.map((a) => ({ q: byId.get(a.questionId), chosen: a.chosen })).filter((x) => x.q);
+  }
+
+  function openReview(attemptId) {
+    const s = set();
+    const attempt = s.quizHistory.find((a) => a.id === attemptId);
+    const items = attemptQuestions(s, attempt);
+    const modal = openModal({
+      title: "Quiz review",
+      className: "quiz-review-modal",
+      body: `
+        <p class="review-summary muted">${attemptWhen(attempt.at)} · <strong>${attempt.correct}/${attempt.total}</strong> (${pctOf(attempt)}%) · ${formatDuration(attempt.seconds)}</p>
+        <ol class="review-all">
+          ${items.map(({ q, chosen }, i) => {
+            const right = chosen === q.answer;
+            const yours = chosen === undefined || chosen === null ? "Not answered" : richText(q.options[chosen]);
+            return `
+              <li class="review-q-item ${right ? "is-right" : "is-wrong"}">
+                <p class="review-q"><span class="review-n">${i + 1}</span>${richText(q.question)}</p>
+                <p class="review-line ${right ? "review-right" : "review-yours"}">
+                  ${icon(right ? "check" : "close")}<span><span class="review-label">Your answer:</span> ${yours}</span>
+                </p>
+                ${right ? "" : `<p class="review-line review-right">${icon("check")}<span><span class="review-label">Correct answer:</span> ${richText(q.options[q.answer])}</span></p>`}
+                <p class="review-explain">${richText(q.explanation)}</p>
+              </li>`;
+          }).join("")}
+        </ol>
+        ${items.length < attempt.answers.length ? `<p class="muted review-summary">${attempt.answers.length - items.length} question(s) from this attempt are no longer in the set.</p>` : ""}
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-modal-close>Close</button>
+          <button type="button" class="btn btn-primary" data-review-retake>Retake this quiz</button>
+        </div>`,
+    });
+    modal.dialog.querySelector("[data-review-retake]").addEventListener("click", () => {
+      modal.close();
+      retake(attemptId);
+    });
+  }
+
+  function retake(attemptId) {
+    const s = set();
+    const attempt = s.quizHistory.find((a) => a.id === attemptId);
+    const questions = attemptQuestions(s, attempt).map((x) => x.q);
+    if (!questions.length) {
+      showToast("Those questions are no longer in this set.");
+      return;
+    }
+    start(shuffle(questions));
+    window.scrollTo(0, 0);
+    main.querySelector(".option").focus();
+  }
+
+  // ---------------------------------------------------------------------------
   // Render + events
   // ---------------------------------------------------------------------------
 
@@ -307,7 +443,8 @@
     else if (state.screen === "question") body = questionHtml(s);
     else body = resultsHtml(s);
 
-    main.innerHTML = `${toolHeaderHtml(s, "Quiz", changeLink)}<div class="quiz-body">${body}</div>`;
+    const history = s.quiz.length && state.screen !== "question" ? historyHtml(s) : "";
+    main.innerHTML = `${toolHeaderHtml(s, "Quiz", changeLink)}<div class="quiz-body">${body}${history}</div>`;
   }
 
   main.addEventListener("click", (event) => {
@@ -337,6 +474,14 @@
     } else if (t.closest("[data-new]")) {
       state.screen = "setup";
       render();
+    } else if (t.closest("[data-review]")) {
+      openReview(t.closest("[data-review]").dataset.review);
+    } else if (t.closest("[data-retake]")) {
+      retake(t.closest("[data-retake]").dataset.retake);
+    } else if (t.closest("[data-history-all]")) {
+      state.historyAll = !state.historyAll;
+      main.querySelector(".quiz-history").outerHTML = historyHtml(set());
+      main.querySelector("[data-history-all]").focus();
     } else if (t.closest("[data-toggle-review]")) {
       const btn = t.closest("[data-toggle-review]");
       const list = main.querySelector("#review-list");

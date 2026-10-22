@@ -1,7 +1,8 @@
 /*
  * Flashcards (app/flashcards.html?set=<id>[&topic=<topicId>]). Load after data.js and app.js.
- * Study mode: due cards one at a time. "Again" sends a card to the back of the
- * queue; "Got it" schedules it for later (see reviewFlashcard in data.js).
+ * Study mode: due cards one at a time, centred, with arrows to move between
+ * them. "Again" sends a card to the back of the queue; "Got it" schedules it
+ * for later (see reviewFlashcard in data.js).
  * Browse mode: a grid of every card.
  */
 (function () {
@@ -15,6 +16,7 @@
     mode: "study",           // "study" | "browse"
     topicId: initialTopic ? initialTopic.id : null,
     queue: [],               // card ids still to answer this session
+    pos: 0,                  // which queued card is showing (the arrows move it)
     deckSize: 0,
     flipped: false,
     gotIt: 0,
@@ -39,6 +41,7 @@
     const deck = includeAll ? cards : cards.filter(isCardDue);
     Object.assign(state, {
       queue: deck.map((c) => c.id),
+      pos: 0,
       deckSize: deck.length,
       flipped: false,
       gotIt: 0,
@@ -69,6 +72,22 @@
       </div>`;
   }
 
+  // Under the card: "Show answer" until it's flipped, then Again / Got it.
+  function answerSlotHtml() {
+    if (!state.flipped) {
+      return `<button type="button" class="btn btn-secondary btn-block" data-show-answer>Show answer <kbd aria-hidden="true">Space</kbd></button>`;
+    }
+    return `
+      <div class="answer-buttons">
+        <button type="button" class="btn btn-secondary answer-again" data-answer="again">
+          <kbd aria-hidden="true">1</kbd> Again
+        </button>
+        <button type="button" class="btn btn-primary answer-got" data-answer="got">
+          Got it <kbd aria-hidden="true">2</kbd>
+        </button>
+      </div>`;
+  }
+
   function cardHtml(card, set) {
     return `
       <div class="flashcard-stage">
@@ -87,15 +106,12 @@
           </div>
         </div>
       </div>
-      <div class="answer-buttons"${state.flipped ? "" : " hidden"}>
-        <button type="button" class="btn btn-secondary answer-again" data-answer="again">
-          <kbd aria-hidden="true">←</kbd> Again
-        </button>
-        <button type="button" class="btn btn-primary answer-got" data-answer="got">
-          Got it <kbd aria-hidden="true">→</kbd>
-        </button>
-      </div>
-      <p class="fc-help muted">Space flips · ← Again · → Got it · Swipe on mobile</p>`;
+      <div class="answer-slot">${answerSlotHtml()}</div>
+      <div class="fc-controls">
+        <button type="button" class="fc-arrow" data-move="-1" aria-label="Previous card"${state.queue.length > 1 ? "" : " disabled"}>${icon("chevronLeft")}</button>
+        <span class="fc-counter"><strong>${state.pos + 1}</strong> / ${state.queue.length}</span>
+        <button type="button" class="fc-arrow" data-move="1" aria-label="Next card"${state.queue.length > 1 ? "" : " disabled"}>${icon("chevronRight")}</button>
+      </div>`;
   }
 
   function studyHtml(set) {
@@ -107,7 +123,7 @@
         <span class="due-pill">${dueCount} due today</span>
         <span class="muted">${state.gotIt} of ${state.deckSize} done</span>
       </div>
-      <div class="progress" role="progressbar" aria-label="Session progress"
+      <div class="progress progress-thin" role="progressbar" aria-label="Session progress"
         aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
         <div class="progress-fill" style="width: ${pct}%"></div>
       </div>`;
@@ -123,8 +139,8 @@
             action: { label: "Go to set", href: `set.html?set=${encodeURIComponent(set.id)}` } });
     }
 
-    const card = set.flashcards.find((c) => c.id === state.queue[0]);
-    return `${stats}${cardHtml(card, set)}`;
+    const card = set.flashcards.find((c) => c.id === state.queue[state.pos]);
+    return `${cardHtml(card, set)}<div class="fc-session">${stats}</div>`;
   }
 
   function summaryHtml(set) {
@@ -183,14 +199,19 @@
     document.title = `Flashcards · ${set.name} · SkipXam`;
     main.innerHTML = `
       ${toolHeaderHtml(set, "Flashcards")}
-      ${filtersHtml(set)}
-      <div class="fc-body">${state.mode === "study" ? studyHtml(set) : browseHtml(set)}</div>
+      <div class="fc-page is-${state.mode}">
+        <div class="fc-body">${state.mode === "study" ? studyHtml(set) : browseHtml(set)}</div>
+        ${filtersHtml(set)}
+        <p class="fc-help muted"${state.mode === "study" ? "" : " hidden"}>Space flips · ← → move between cards · 1 Again · 2 Got it · Swipe on mobile</p>
+      </div>
       <p class="visually-hidden" aria-live="polite" id="fc-status"></p>`;
   }
 
   function renderBody() {
     const set = currentSet();
+    main.querySelector(".fc-page").className = `fc-page is-${state.mode}`;
     main.querySelector(".fc-body").innerHTML = state.mode === "study" ? studyHtml(set) : browseHtml(set);
+    main.querySelector(".fc-help").hidden = state.mode !== "study";
   }
 
   function announce(text) {
@@ -210,23 +231,27 @@
     card.setAttribute("aria-label", state.flipped ? "Answer shown. Press Space to flip back" : "Show answer");
     card.querySelector(".face-front").setAttribute("aria-hidden", String(state.flipped));
     card.querySelector(".face-back").setAttribute("aria-hidden", String(!state.flipped));
-    main.querySelector(".answer-buttons").hidden = !state.flipped;
+    const slot = main.querySelector(".answer-slot");
+    const hadFocus = slot.contains(document.activeElement);
+    slot.innerHTML = answerSlotHtml();
+    if (hadFocus) slot.querySelector(".btn-primary, .btn").focus();
     if (state.flipped) announce(`Answer: ${card.querySelector(".face-back .face-text").textContent}`);
   }
 
   function answer(gotIt) {
     if (!state.flipped || state.busy || !state.queue.length) return;
-    const id = state.queue[0];
+    const id = state.queue[state.pos];
     reviewFlashcard(initialSet.id, id, gotIt);
 
+    state.queue.splice(state.pos, 1);
     if (gotIt) {
-      state.queue.shift();
       state.gotIt += 1;
       if (!state.needsAgain.has(id)) state.firstTry.add(id);
     } else {
       state.needsAgain.add(id);
-      state.queue.push(state.queue.shift()); // see it again later in this session
+      state.queue.push(id); // see it again later in this session
     }
+    if (state.pos >= state.queue.length) state.pos = 0;
     recordActivity(initialSet.id, "flashcards", state.gotIt, state.deckSize);
 
     const advance = () => {
@@ -245,6 +270,14 @@
     state.busy = true;
     cardEl.classList.add(gotIt ? "fly-right" : "fly-left");
     setTimeout(advance, 260);
+  }
+
+  function move(step) {
+    if (state.mode !== "study" || state.done || state.queue.length < 2 || state.busy) return;
+    state.pos = (state.pos + step + state.queue.length) % state.queue.length;
+    state.flipped = false;
+    renderBody();
+    announce(`Card ${state.pos + 1} of ${state.queue.length}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -267,6 +300,17 @@
     if (event.target.closest("[data-mode-browse]")) {
       state.mode = "browse";
       render();
+      return;
+    }
+    if (event.target.closest("[data-show-answer]")) {
+      flip();
+      return;
+    }
+    const arrow = event.target.closest("[data-move]");
+    if (arrow) {
+      move(Number(arrow.dataset.move));
+      const again = main.querySelector(`[data-move="${arrow.dataset.move}"]`);
+      if (again) again.focus();
       return;
     }
     const answerBtn = event.target.closest("[data-answer]");
@@ -325,9 +369,13 @@
       event.preventDefault();
       flip();
     } else if (event.key === "ArrowRight" && !event.target.closest("[role='radiogroup']")) {
-      answer(true);
+      move(1);
     } else if (event.key === "ArrowLeft" && !event.target.closest("[role='radiogroup']")) {
+      move(-1);
+    } else if (event.key === "1") {
       answer(false);
+    } else if (event.key === "2") {
+      answer(true);
     }
   });
 

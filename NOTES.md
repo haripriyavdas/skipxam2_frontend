@@ -28,7 +28,13 @@ js/app.js          Shared UI: icons, helpers, openModal/confirmDialog, toasts, o
                    search/share/materials sheets, study timer, dev plan toggle
 js/<page>.js       Page logic (one per page)
 js/college-picker.js   Searchable college picker (profile edit modal)
+js/tutor-chat.js   Tutor chat component (tutor page + side tutor panel): mock replies, models, voice typing,
+                   read aloud, voice call. css/tutor-chat.css holds its styles.
 js/badges.js       Badge definitions, SVG emblems, badge detail card
+js/notes-content.js  Seed document for the notes editor: Java notes HTML, auto stickies, source-star quotes
+assets/sample.pdf  Mock Java lecture notes (7 pages) that the notes' source stars point into
+assets/sample-pdf-source.html  HTML the PDF is printed from (rebuild steps are in its header comment)
+assets/sample-pdf.js  Generated base64 copy of the PDF for file:// use. Regenerate: python assets/make-sample-pdf-js.py
 data/colleges.json Source list: 226 colleges {name, short, city, state, type, university}
 data/colleges.js   Generated copy for file:// use. Regenerate: python data/make-colleges-js.py
 app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practice-test, visual-memory,
@@ -84,17 +90,32 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
   - numbered topic tabs in plan order (`?topic=`)
   - current topic card with Skip
   - activity cards (3, then 3 more behind "Show more")
-- **Tutor button:** a floating glass "Ask Tutor" button.
+- **Tutor button:** a floating glass "Ask Tutor" button. It opens the side tutor panel (`openTutorPanel`): a slide-in chat on the right (full screen on mobile) with a topic picker, Call, "open full page" and close. Free users get the pricing modal. Escape closes it.
 
 ### Study tools
 
-- **Notes:** reading view.
-- **Flashcards:** spaced repetition. "Got it" doubles the interval; "Again" resets it.
-- **Quiz:** `?topic=` starts a topic quiz; `?unit=` runs a 5-question knowledge check. Results update topic mastery.
-- **Practice test:** Pro. Exam mode, question palette, confirm before submit, mock marking against key points.
+- **Notes (read-and-edit):**
+  - Document from `NOTES_SEED[setId]` (Java: 2,100+ words from the PDF) or, for other sets, built from their smart notes. Saved per set in `localStorage` under `skipxam.notes.v1` (`{ html, stickies, savedAt }`); `resetData()` clears it.
+  - Contents on the left (container width 1040px+; otherwise a "Jump to section" select). Sub-headings show only for the current section.
+  - Read/Edit toggle (remembered in `skipxam.notesMode`). Edit mode: contenteditable + `document.execCommand`, so undo/redo are the browser's. Toolbar: undo, redo, H1–H3, bold, italic, underline, strikethrough, highlight and text colour menus, four alignments, bullet/numbered/checklist, quote, code block, table, link (modal), image (shrunk to 1000px JPEG data URL). Shortcuts are listed in the keyboard sheet on the toolbar. Mini-toolbar on text selection; "Add sticky note" works in both modes.
+  - Autosave 0.7s after a change, with a Saved / Saving… / "storage is full" indicator. Ctrl+S saves now.
+  - Source stars (`button.source-star[data-source]`) open a side panel (bottom sheet on mobile): PDF.js renders the page and highlights the quoted passage (matched ignoring spacing and case). PDF.js loads from cdnjs on first use via `loadPdfJs()` in `app.js`; offline, the panel says so and still shows the quote.
+  - Stickies: auto ones (Exam tip, Common mistake, Remember, Formula) and the user's own ("My note", type changeable). Each points at a `span.sticky-anchor`; in the right margin they line up with it and push each other down, can be dragged (or moved with arrow keys on the grip), collapsed, edited and deleted. Under 860px layout width they show inline after the paragraph.
+- **Flashcards:** spaced repetition. "Got it" doubles the interval; "Again" resets it. Study view is centred: card, then Show answer / Again · Got it, then ‹ counter › arrows, session progress, and the Study/Browse + topic toolbar. Keys: Space flips, ← → move between cards, 1 Again, 2 Got it.
+- **Quiz:** `?topic=` starts a topic quiz; `?unit=` runs a 5-question knowledge check. Results update topic mastery. The card is centred; below it "Your quiz history" (attempts, best, average, then rows with date, topics, score, time, Review and Retake). Every finished quiz, and every study plan lesson quiz, is saved with `saveQuizAttempt()` to `set.quizHistory` (newest first, 100 kept). Review opens each question with your answer, the correct one and the explanation.
+- **Practice test:** Pro. Setup: choose a source (upload a reference paper as PDF/image, a saved pattern, or the standard 25-mark format) → for uploads an "Analysing the paper pattern" screen (mock: ~4s of steps, then a fixed 50-mark pattern) with a thumbnail of page 1 → pattern editor (name, total marks, duration, sections table: questions, marks each, question type, choice rule "Answer any N of M"; warnings when marks don't add up or the set lacks questions; "Save this pattern"; paper thumbnail beside the table) → "Generate test" → exam mode. In a section with a choice rule, the best N answers count. Saved patterns live in `user.testPatterns` (`getTestPatterns`, `saveTestPattern`, `deleteTestPattern`); one example is seeded. Exam mode, palette, confirm before submit and key-point marking are unchanged.
 - **Visual memory:** Pro. Mnemonics and diagrams.
-- **Record lecture:** Pro.
-- **Tutor:** Pro. Chat with a mastery meter.
+- **Record lecture:** Pro. Two columns (stacked under 760px of page width).
+  - Left: lecture title, record button, timer, a scrolling waveform from the microphone (Web Audio `AnalyserNode`, RMS per frame), Pause / Resume / Stop. `MediaRecorder` keeps the audio; after Stop you can listen back, and transcript timestamps jump the player.
+  - Right: live transcript (Web Speech API, `en-IN`, continuous, restarted after silences), each line stamped `[mm:ss]` from when the phrase started, interim words in italics, auto-scroll that pauses when you scroll up ("Jump to latest").
+  - After Stop: "Generate notes from this lecture?" → Transcript / Notes tabs. Notes are drafted from the transcript (mock AI): summary, key points, key terms, "Remember" from the matched topic, an outline with timestamps. "Save to study set" saves the recording, transcript and notes in one go (`saveLecture` in `data.js`), with the audio in IndexedDB (`skipxam-audio` / `recordings`, keyed by recording id). The set's materials get the audio file, or a transcript file if there's no audio.
+  - Past recordings for the set below, each with notes, transcript and, if saved on this device, the audio.
+  - No microphone (or pages opened from disk, where browsers block it) → a labelled demo: simulated waveform and a transcript read from the set's notes. No speech recognition → real audio plus the demo transcript.
+- **Tutor:** Pro. Topic picker and mastery meter beside the shared chat (`createTutorChat` in `tutor-chat.js`), which the side panel also uses.
+  - Model picker beside the input (opens upward): Fast (short, ~0.3s), Smart (default), Deep ("Thinking it through…", ~2s, adds an exam angle). Remembered in `skipxam.tutorModel`; each reply shows its model.
+  - Mic in the input: Web Speech API, `en-IN`, continuous with interim results, written into the box live. Unsupported browsers or a blocked mic get a toast.
+  - Read aloud on each reply: `speechSynthesis` (prefers an en-IN voice), play/pause (pause remembers the word reached), speed 0.75–2× (remembered in `skipxam.tutorRate`; changing it restarts from the current word), stop. If audio fails, a toast says so.
+  - Call: full-screen dialog with the mascot inside a pulsing radial orb (breathes while listening, pulses per spoken word), word-by-word captions of the tutor and live captions of what you say, a call timer, and Mute / Switch to chat / End call. It takes turns: speak, then listen. You can answer quiz questions by saying a letter ("option B") or the option. Everything said is added to the chat, with "Voice call started" / "Call ended · m:ss" notes. Without speech recognition (or with the mic blocked) a "Type instead" box appears; without audio the captions still advance at speaking pace.
 - **Calendar:** month and week views, a mock Google Calendar connection, reminders.
 
 ### Study plan (`plan`)
@@ -102,9 +123,14 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - **Header:** a "How it works" link that can be dismissed.
 - **Customize bar:**
   - Mode: Cram 40%, Standard 70%, Comprehensive 100% of topics. The weakest topics have priority.
-  - Sort: Recommended, Exam order, Weakest first. Sorting happens within units.
-  - Status filter and settings (exam date, rebuild).
-- **Timeline:** Start → units (collapsible, each with a knowledge check) → topic rows with status circles → Exam day.
+  - Sort: Recommended, Exam order, Weakest first. Orders the unfinished lessons within each unit; done ones always come first.
+  - Status filter (dims the nodes that don't match, so the path stays intact) and settings (exam date, rebuild).
+- **Learning path (Duolingo-style):** units with a coloured banner (set colour), round topic nodes on a zig-zag, joined by a curved SVG line drawn from the measured node positions (redrawn on resize; amber up to the current node), a checkpoint node (trophy) at the end of each unit, then Exam day.
+  - Node states: done, current (pulsing ring and a "Start" bubble), available, locked. A node unlocks when the one before it is done; a checkpoint unlocks when every lesson in its unit is done, and the next unit needs the checkpoint passed.
+  - A topic counts as done when its lesson is finished (`topic.lessonDone`) or it is covered (75%+ mastery). Passed checkpoints are in `set.checkpoints` (`{ unitId: date }`). Helpers: `isLessonDone`, `completeLesson`, `completeCheckpoint` in `data.js`.
+  - Clicking a node opens a popover: name, estimated time, and Start lesson / Practice again / Locked.
+- **Lesson:** a full-screen dialog with a progress bar: the topic's smart notes → its flashcards (flip, Again / Got it, updates spaced repetition) → a 5-question quiz (topped up from the unit, then the set; keys 1–4 or A–D) → a done screen. Finishing marks the node done, updates mastery and the quiz stats, logs the activity and moves the set's current topic on. Quitting mid-lesson asks first.
+- **Checkpoint:** 5 questions on the unit; 3 correct passes. Failing offers Try again.
 
 ### Profile (`profile`)
 

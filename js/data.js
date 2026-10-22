@@ -504,6 +504,47 @@
   let memory = null; // fallback if localStorage is unavailable (private mode, blocked storage)
 
   // Turns the relative seed fields into real dates, counted from today.
+  // Practice test paper patterns. Section: { name, type: mcq | short | long, count, marks, attempt }
+  // where `attempt` is how many of the `count` questions must be answered ("Answer any 2 of 3").
+  const SEED_TEST_PATTERNS = [
+    {
+      id: "pattern-internal",
+      name: "Internal assessment (30 marks)",
+      totalMarks: 30,
+      minutes: 60,
+      sections: [
+        { name: "Part A", type: "mcq", count: 10, marks: 1, attempt: 10 },
+        { name: "Part B", type: "short", count: 3, marks: 5, attempt: 2 },
+        { name: "Part C", type: "long", count: 2, marks: 10, attempt: 1 },
+      ],
+    },
+  ];
+
+  // Past quiz attempts for the demo: [setId, hoursAgo, questions, correct, seconds].
+  // Questions are taken in order from the set's quiz; the first `correct` are answered right.
+  const SEED_QUIZ_HISTORY = [
+    ["java", 2, 10, 7, 312],
+    ["java", 50, 10, 6, 405],
+    ["java", 120, 5, 3, 168],
+    ["dbms", 28, 10, 4, 371],
+  ];
+
+  function seedQuizHistory(set) {
+    return SEED_QUIZ_HISTORY.filter(([id]) => id === set.id).map(([, hoursAgo, count, correct, seconds], n) => {
+      const qs = set.quiz.slice((n * 3) % Math.max(1, set.quiz.length - count), (n * 3) % Math.max(1, set.quiz.length - count) + count);
+      return {
+        id: `quiz-seed-${set.id}-${n + 1}`,
+        at: new Date(Date.now() - hoursAgo * 3600000).toISOString(),
+        source: "quiz",
+        topicIds: [...new Set(qs.map((q) => q.topicId))],
+        answers: qs.map((q, i) => ({ questionId: q.id, chosen: i < correct ? q.answer : (q.answer + 1) % q.options.length })),
+        correct: Math.min(correct, qs.length),
+        total: qs.length,
+        seconds,
+      };
+    });
+  }
+
   function seed() {
     const today = todayISO();
     const sets = clone(SEED_SETS).map(({ examInDays, openedHoursAgo, studyPlan, ...set }) => ({
@@ -523,6 +564,8 @@
       set.studyPlan.push(...generateTasks(set, addDays(last, 1), set.examDate));
     }
 
+    for (const set of sets) set.quizHistory = seedQuizHistory(set);
+
     // One past lecture recording so the Record page has history.
     const java = sets.find((x) => x.id === "java");
     const lecture = buildRecording(java, "java-topic-3", 1260, addDays(today, -3));
@@ -532,6 +575,7 @@
     user.studyToday.date = today;
     user.history = seedHistory(today);
     user.badges = seedBadges(today);
+    user.testPatterns = clone(SEED_TEST_PATTERNS);
 
     const ago = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
     const activities = [
@@ -586,6 +630,10 @@
     if (!user.referral || user.referral.daysEarned === undefined) user.referral = clone(SEED_USER.referral);
     if (!user.badges || !Object.keys(user.badges).length) user.badges = seedBadges(today);
     if (!user.timeFlags) user.timeFlags = clone(SEED_USER.timeFlags);
+    if (!user.testPatterns) user.testPatterns = clone(SEED_TEST_PATTERNS);
+    for (const set of data.sets) {
+      if (!set.quizHistory) set.quizHistory = seedQuizHistory(set);
+    }
     return data;
   }
 
@@ -667,6 +715,7 @@
       mnemonics: [],
       diagrams: [],
       recordings: [],
+      quizHistory: [],
       planExamDate: null,
       units: [],
       currentTopicId: null,
@@ -838,6 +887,24 @@
 
   // ---------- User settings ----------
 
+  // Saves a lecture recorded on the Record page: { title, durationSec, transcript: [{ at, text }],
+  // notes: [string] (key points), summary, terms, remember, topicId, hasAudio }. The audio itself
+  // lives in IndexedDB under the recording id (see record.js). Returns the saved recording.
+  function saveLecture(setId, lecture) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`saveLecture: no set "${setId}"`);
+    const id = `${set.id}-rec-${Date.now().toString(36)}`;
+    const date = todayISO();
+    const recording = { id, date, notes: [], topicId: null, hasAudio: false, ...lecture };
+    set.recordings.unshift(recording);
+    // Materials list: the audio if there is any, otherwise the transcript.
+    set.files.push(recording.hasAudio
+      ? { id: `${id}-file`, name: `${lecture.title}.webm`, type: "audio", date }
+      : { id: `${id}-file`, name: `${lecture.title} transcript.txt`, type: "doc", date });
+    persist();
+    return clone(recording);
+  }
+
   function setCalendarConnected(connected) {
     load().user.calendarConnected = Boolean(connected);
     persist();
@@ -935,6 +1002,72 @@
     const next = plan[(plan.findIndex((p) => p.topic.id === current.topic.id) + 1) % plan.length];
     setCurrentTopic(setId, next.topic.id);
     return next.topic.id;
+  }
+
+  // ---------- Quiz history ----------
+  // attempt: { source: "quiz" | "lesson", answers: [{ questionId, chosen }], correct, total, seconds }.
+  // Newest first; the 100 most recent are kept.
+
+  function saveQuizAttempt(setId, attempt) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`saveQuizAttempt: no set "${setId}"`);
+    const questionsById = new Map(set.quiz.map((q) => [q.id, q]));
+    const full = {
+      id: `quiz-${Date.now().toString(36)}`,
+      at: new Date().toISOString(),
+      source: "quiz",
+      ...attempt,
+      topicIds: [...new Set(attempt.answers.map((a) => (questionsById.get(a.questionId) || {}).topicId).filter(Boolean))],
+    };
+    set.quizHistory = [full, ...(set.quizHistory || [])].slice(0, 100);
+    persist();
+    return clone(full);
+  }
+
+  // ---------- Practice test patterns ----------
+
+  function getTestPatterns() {
+    return clone(load().user.testPatterns || []);
+  }
+
+  // Saves a pattern; one with the same name is replaced. Returns the saved copy.
+  function saveTestPattern(pattern) {
+    const user = load().user;
+    user.testPatterns = user.testPatterns || [];
+    const existing = user.testPatterns.findIndex((p) => p.name.trim().toLowerCase() === pattern.name.trim().toLowerCase());
+    const saved = { ...clone(pattern), id: existing >= 0 ? user.testPatterns[existing].id : `pattern-${Date.now().toString(36)}` };
+    if (existing >= 0) user.testPatterns[existing] = saved;
+    else user.testPatterns.unshift(saved);
+    persist();
+    return clone(saved);
+  }
+
+  function deleteTestPattern(id) {
+    const user = load().user;
+    user.testPatterns = (user.testPatterns || []).filter((p) => p.id !== id);
+    persist();
+  }
+
+  // ---------- Learning path (plan.html) ----------
+  // A topic's node is done once its lesson is finished (lessonDone) or it is covered (75%+).
+  // Unit checkpoints are stored as { [unitId]: "YYYY-MM-DD" } when passed.
+
+  const isLessonDone = (topic) => Boolean(topic.lessonDone) || topicStatus(topic) === "done";
+
+  function completeLesson(setId, topicIdValue) {
+    const set = load().sets.find((s) => s.id === setId);
+    const topic = set && set.topics.find((t) => t.id === topicIdValue);
+    if (!topic) throw new Error(`completeLesson: no topic "${topicIdValue}"`);
+    topic.lessonDone = true;
+    persist();
+  }
+
+  function completeCheckpoint(setId, unitId) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`completeCheckpoint: no set "${setId}"`);
+    set.checkpoints = set.checkpoints || {};
+    if (!set.checkpoints[unitId]) set.checkpoints[unitId] = todayISO();
+    persist();
   }
 
   function setPlanOptions(setId, { mode, sort }) {
@@ -1183,6 +1316,7 @@
   function resetData() {
     memory = seed();
     persist();
+    try { localStorage.removeItem("skipxam.notes.v1"); } catch { /* notes editor data */ }
   }
 
   applyTheme();
@@ -1193,9 +1327,11 @@
     getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData, awardBadges,
     getFolders, createFolder, moveSetToFolder,
     getSetMastery, setTaskDone, recordActivity, isCardDue, reviewFlashcard, applyTopicResults,
-    adjustTopicMastery, setExamDate, buildStudyPlan, createRecording, setCalendarConnected, saveReminders,
+    adjustTopicMastery, setExamDate, buildStudyPlan, createRecording, saveLecture, setCalendarConnected, saveReminders,
     topicStatus, isMastered, getSetProgress, PLAN_MODES, PLAN_SORTS, getPlanGroups, getPlanTopics,
     getCurrentTopic, setCurrentTopic, skipTopic, setPlanOptions, duplicateSet,
+    isLessonDone, completeLesson, completeCheckpoint, saveQuizAttempt,
+    getTestPatterns, saveTestPattern, deleteTestPattern,
     logActivity, getActivities, getStudiedToday, addStudyMinute, dismissHint,
     toISODate, parseDate, addDays, todayISO, daysUntil,
   });

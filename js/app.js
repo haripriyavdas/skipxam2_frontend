@@ -1190,12 +1190,40 @@
     showFlashToast();
   });
 
+  // ---------------------------------------------------------------------------
+  // PDF.js, loaded from cdnjs the first time a page needs it. Resolves to pdfjsLib.
+  // ---------------------------------------------------------------------------
+
+  const PDFJS_BASE = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174";
+  let pdfjsPromise = null;
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Could not load ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadPdfJs() {
+    if (!pdfjsPromise) {
+      pdfjsPromise = loadScript(`${PDFJS_BASE}/pdf.min.js`).then(() => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_BASE}/pdf.worker.min.js`;
+        return window.pdfjsLib;
+      });
+      pdfjsPromise.catch(() => { pdfjsPromise = null; }); // allow a retry
+    }
+    return pdfjsPromise;
+  }
+
   Object.assign(window, {
     openCreateSet, openUpgrade, openModal, confirmDialog, proGate, showToast,
     openMaterials, openShare, openSearch, menuSelectHtml, fileBadgeHtml, fileKindLabel, allMaterials,
     escapeHtml, richText, icon, toolUrl, toolLabel, formatDate, formatCountdown, examLabel, masteryRing,
     relativeTime, mascotHtml, queueToast, orbsHtml, planLabel, PLANS, avatarInnerHtml,
     setFromUrl, topicName, setNotFoundHtml, toolHeaderHtml, emptyStateHtml,
-    TOOLS,
+    TOOLS, loadScript, loadPdfJs,
   });
 })();

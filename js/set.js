@@ -306,12 +306,12 @@
       </section>`;
   }
 
-  // Floating button that opens the tutor for this set.
+  // Floating button that opens the side tutor panel (tutor-chat.js) for this set.
   function tutorButtonHtml(set) {
     return `
-      <a class="tutor-fab glass" href="${toolUrl("tutor", set.id)}">
+      <button type="button" class="tutor-fab glass" data-open-tutor aria-haspopup="dialog">
         ${icon("tutor")}<span>Ask Tutor</span>${isFree() ? '<span class="badge badge-pro">Pro</span>' : ""}
-      </a>`;
+      </button>`;
   }
 
   function renderHome(set) {
@@ -394,6 +394,8 @@
     const t = event.target;
     const set = setId && getSet(setId);
     if (!set) return;
+    const tutorBtn = t.closest("[data-open-tutor]");
+    if (tutorBtn) return openTutorPanel(setId, { opener: tutorBtn });
     const tab = t.closest("[data-topic-tab]");
     if (tab) return selectTopic(tab.dataset.topicTab, false);
     if (t.closest("[data-skip]")) {

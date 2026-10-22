@@ -1,30 +1,117 @@
 /* Flashcards (app/flashcards.html). Load after app.css. */
 
+/* ---------- Page: the card centred, controls and toolbar below ---------- */
+.fc-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fc-page.is-study {
+  justify-content: center;
+  min-height: calc(100dvh - var(--topbar-height) - 200px);
+}
+
+.fc-body {
+  width: 100%;
+  max-width: 640px;
+}
+
+.fc-page.is-browse .fc-body {
+  max-width: none;
+}
+
 .fc-toolbar {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-5);
+  width: 100%;
+  margin-top: var(--space-5);
 }
 
-.fc-toolbar .segmented {
-  align-self: flex-start;
+.fc-page.is-browse .fc-toolbar {
+  order: -1; /* browsing: filters first, then the grid */
+  margin: 0 0 var(--space-5);
 }
 
 .fc-topics {
   display: flex;
+  justify-content: safe center; /* centred, but scrolls from the start when it overflows */
   gap: var(--space-2);
+  max-width: 100%;
   overflow-x: auto;
-  margin: 0 calc(-1 * var(--space-4));
-  padding: 0 var(--space-4) var(--space-1);
+  padding-bottom: var(--space-1);
+  scrollbar-width: thin;
+}
+
+@media (max-width: 599px) {
+  .fc-topics {
+    max-width: calc(100% + 2 * var(--space-4));
+    margin: 0 calc(-1 * var(--space-4));
+    padding: 0 var(--space-4) var(--space-1);
+  }
 }
 
 .fc-topics .chip {
   flex-shrink: 0;
 }
 
-.fc-body {
-  max-width: var(--content-narrow);
+.fc-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.fc-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.fc-arrow:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.fc-arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fc-arrow .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.fc-counter {
+  min-width: 64px;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fc-counter strong {
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+
+.fc-session {
+  width: 100%;
+  max-width: 320px;
+  margin: var(--space-4) auto 0;
 }
 
 .fc-stats {
@@ -45,7 +132,7 @@
 
 /* ---------- The card ---------- */
 .flashcard-stage {
-  margin: var(--space-5) 0 var(--space-4);
+  margin: 0 0 var(--space-4);
   perspective: 1200px;
 }
 
@@ -149,8 +236,8 @@
   gap: var(--space-3);
 }
 
-.answer-buttons[hidden] {
-  display: none;
+.answer-slot {
+  min-height: 48px; /* same height either way, so the card doesn't jump when it flips */
 }
 
 .answer-again {
@@ -236,10 +323,6 @@ kbd {
 }
 
 /* ---------- Browse grid ---------- */
-.fc-body:has(.fc-grid) {
-  max-width: none;
-}
-
 .fc-count {
   margin-bottom: var(--space-3);
   font-size: var(--text-sm);
