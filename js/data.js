@@ -111,8 +111,9 @@
     billing: "monthly", // "monthly" | "yearly"
     planRenews: null, // renewal date for paid plans
     referral: { code: "SAMRAT7", joined: 3, daysEarned: 21 },
-    badges: {}, // { badgeId: "YYYY-MM-DD" earned }; seed() fills the demo's earned badges
-    timeFlags: { earlyBird: false, nightOwl: true }, // studied before 8 AM / after 11 PM
+    // Leaderboard points: 1 per focus minute, 10 per quiz, 1 per flashcard, 25 per lesson.
+    // weekStart is the Monday the weekly count belongs to; it resets each Monday.
+    points: null, // seed() fills { weekStart, week, lastWeek, allTime }
     settings: { dailyGoal: 60, notifications: true, theme: "dark" },
     stats: { flashcardsReviewed: 412, quizzesTaken: 23, quizScoreTotal: 1656 }, // average = total / taken
     history: {}, // { "YYYY-MM-DD": minutes } for past days; seed() fills 16 weeks
@@ -574,7 +575,8 @@
     const user = clone(SEED_USER);
     user.studyToday.date = today;
     user.history = seedHistory(today);
-    user.badges = seedBadges(today);
+    user.points = seedPoints(user, today);
+    user.friends = clone(SEED_FRIENDS);
     user.testPatterns = clone(SEED_TEST_PATTERNS);
 
     const ago = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
@@ -610,11 +612,109 @@
     return history;
   }
 
-  function seedBadges(today) {
-    return {
-      streak3: addDays(today, -49), streak7: addDays(today, -45), firstQuiz: addDays(today, -60),
-      cards100: addDays(today, -30), hours10: addDays(today, -70), nightOwl: addDays(today, -12),
-    };
+  // ---------- Leaderboard ----------
+  const POINTS = { minute: 1, quiz: 10, flashcard: 1, lesson: 25 };
+
+  // Mock friends. rate: points a day this week (their weekly total grows with
+  // the days gone since Monday). lastWeek: last week's total. allTimeBefore:
+  // their all-time total before this week.
+  const SEED_FRIENDS = [
+    { id: "f-ananya", name: "Ananya Rao", college: "RVCE", rate: 96, lastWeek: 610, allTimeBefore: 9150 },
+    { id: "f-rohan", name: "Rohan Iyer", college: "BMSCE", rate: 84, lastWeek: 640, allTimeBefore: 8020 },
+    { id: "f-priya", name: "Priya Nair", college: "PES University", rate: 75, lastWeek: 455, allTimeBefore: 7380 },
+    { id: "f-karthik", name: "Karthik Reddy", college: "MSRIT", rate: 69, lastWeek: 520, allTimeBefore: 6860 },
+    { id: "f-meera", name: "Meera Joshi", college: "BMSCE", rate: 58, lastWeek: 300, allTimeBefore: 5580 },
+    { id: "f-aditya", name: "Aditya Kulkarni", college: "Christ University", rate: 51, lastWeek: 410, allTimeBefore: 5590 },
+    { id: "f-sneha", name: "Sneha Gowda", college: "Dayananda Sagar", rate: 40, lastWeek: 265, allTimeBefore: 5200 },
+    { id: "f-arjun", name: "Arjun Menon", college: "NIT Surathkal", rate: 31, lastWeek: 330, allTimeBefore: 5225 },
+    { id: "f-fatima", name: "Fatima Khan", college: "BMSCE", rate: 22, lastWeek: 150, allTimeBefore: 2480 },
+  ];
+
+  // The Monday on or before iso.
+  function mondayOf(iso) {
+    const day = parseDate(iso).getDay(); // 0 = Sunday
+    return addDays(iso, -((day + 6) % 7));
+  }
+
+  // Days of this week so far, today included: Monday 1 ... Sunday 7.
+  const daysIntoWeek = (today) => Math.round((parseDate(today) - parseDate(mondayOf(today))) / 86400000) + 1;
+
+  // The demo user's points, worked out from their study history (minutes)
+  // plus a little for quizzes, flashcards and lessons.
+  function seedPoints(user, today) {
+    const monday = mondayOf(today);
+    const todayMinutes = user.studyToday && user.studyToday.date === today ? user.studyToday.minutes : 0;
+    let week = todayMinutes;
+    let lastWeek = 0;
+    let all = todayMinutes;
+    for (const [date, minutes] of Object.entries(user.history || {})) {
+      all += minutes;
+      if (date >= monday) week += minutes;
+      else if (date >= addDays(monday, -7)) lastWeek += minutes;
+    }
+    week += 20 * daysIntoWeek(today);
+    lastWeek += 140;
+    all += user.stats.quizzesTaken * POINTS.quiz + user.stats.flashcardsReviewed * POINTS.flashcard;
+    return { weekStart: monday, week, lastWeek, allTime: all };
+  }
+
+  // Starts a new week when a Monday has passed since the points were last
+  // touched. Returns true if anything changed.
+  function rollWeek(user) {
+    const monday = mondayOf(todayISO());
+    const points = user.points;
+    if (points.weekStart >= monday) return false;
+    const weeks = Math.round((parseDate(monday) - parseDate(points.weekStart)) / (7 * 86400000));
+    points.lastWeek = weeks === 1 ? points.week : 0;
+    points.week = 0;
+    points.weekStart = monday;
+    (user.friends || []).forEach((f, i) => {
+      const full = Math.round(f.rate * 7);
+      f.allTimeBefore += full * weeks;
+      f.lastWeek = full;
+      f.rate = Math.max(10, Math.round(f.rate * (0.85 + ((i * 7 + weeks * 13) % 31) / 100))); // a new week, a new pace
+    });
+    return true;
+  }
+
+  function addPoints(user, n) {
+    if (!user.points) return;
+    rollWeek(user);
+    user.points.week += n;
+    user.points.allTime += n;
+  }
+
+  // range: "week" | "all". The user and their friends ranked by points.
+  // change compares with last week's rank (week: last week's points; all:
+  // all-time points before this week); above 0 means they moved up.
+  // Returns { range, weekStart, friendCount, entries: [{ id, name, college,
+  // avatar, isYou, points, rank, change }] }.
+  function getLeaderboard(range) {
+    const user = load().user;
+    if (rollWeek(user)) persist();
+    const days = daysIntoWeek(todayISO());
+    const p = user.points;
+    const college = user.education && user.education.college;
+    const people = [
+      {
+        id: "you", name: user.name, college: college ? college.short || college.name : "", avatar: user.avatar, isYou: true,
+        points: range === "all" ? p.allTime : p.week,
+        before: range === "all" ? p.allTime - p.week : p.lastWeek,
+      },
+      ...(user.friends || []).map((f) => {
+        const week = Math.round(f.rate * days);
+        return {
+          id: f.id, name: f.name, college: f.college, avatar: null, isYou: false,
+          points: range === "all" ? f.allTimeBefore + week : week,
+          before: range === "all" ? f.allTimeBefore : f.lastWeek,
+        };
+      }),
+    ];
+    // Ties: the user first, then by name.
+    const order = (key) => [...people].sort((a, b) => b[key] - a[key] || (a.isYou ? -1 : b.isYou ? 1 : a.name.localeCompare(b.name)));
+    const lastRank = new Map(order("before").map((x, i) => [x.id, i + 1]));
+    const entries = order("points").map(({ before, ...x }, i) => ({ ...x, rank: i + 1, change: lastRank.get(x.id) - (i + 1) }));
+    return { range, weekStart: p.weekStart, friendCount: people.length - 1, entries };
   }
 
   // Adds fields introduced after v7 so saved data keeps working without a reset.
@@ -628,8 +728,10 @@
       delete user.year;
     }
     if (!user.referral || user.referral.daysEarned === undefined) user.referral = clone(SEED_USER.referral);
-    if (!user.badges || !Object.keys(user.badges).length) user.badges = seedBadges(today);
-    if (!user.timeFlags) user.timeFlags = clone(SEED_USER.timeFlags);
+    delete user.badges; // badges were removed from the profile
+    delete user.timeFlags;
+    if (!user.points) user.points = seedPoints(user, today);
+    if (!user.friends) user.friends = clone(SEED_FRIENDS);
     if (!user.testPatterns) user.testPatterns = clone(SEED_TEST_PATTERNS);
     for (const set of data.sets) {
       if (!set.quizHistory) set.quizHistory = seedQuizHistory(set);
@@ -758,7 +860,9 @@
       card.interval = 0;
       card.due = todayISO();
     }
-    load().user.stats.flashcardsReviewed += 1;
+    const user = load().user;
+    user.stats.flashcardsReviewed += 1;
+    addPoints(user, POINTS.flashcard);
     persist();
   }
 
@@ -1058,6 +1162,7 @@
     const set = load().sets.find((s) => s.id === setId);
     const topic = set && set.topics.find((t) => t.id === topicIdValue);
     if (!topic) throw new Error(`completeLesson: no topic "${topicIdValue}"`);
+    if (!topic.lessonDone) addPoints(load().user, POINTS.lesson); // a retake earns nothing more
     topic.lessonDone = true;
     persist();
   }
@@ -1113,9 +1218,7 @@
     const today = todayISO();
     if (!user.studyToday || user.studyToday.date !== today) user.studyToday = { date: today, minutes: 0 };
     user.studyToday.minutes += 1;
-    const hour = new Date().getHours();
-    if (hour < 8) user.timeFlags.earlyBird = true;
-    if (hour >= 23) user.timeFlags.nightOwl = true;
+    addPoints(user, POINTS.minute);
     persist();
     return user.studyToday.minutes;
   }
@@ -1225,24 +1328,11 @@
 
   // pct: the quiz score, 0–100.
   function recordQuizScore(pct) {
-    const stats = load().user.stats;
-    stats.quizzesTaken += 1;
-    stats.quizScoreTotal += pct;
-    persist();
-  }
-
-  // Records today's date for newly earned badges. Already earned ones keep their date.
-  function awardBadges(ids) {
     const user = load().user;
-    let changed = false;
-    for (const id of ids) {
-      if (!user.badges[id]) {
-        user.badges[id] = todayISO();
-        changed = true;
-      }
-    }
-    if (changed) persist();
-    return clone(user.badges);
+    user.stats.quizzesTaken += 1;
+    user.stats.quizScoreTotal += pct;
+    addPoints(user, POINTS.quiz);
+    persist();
   }
 
   function exportData() {
@@ -1324,7 +1414,7 @@
   Object.assign(window, {
     getSets, getSet, saveSet, createSet, deleteSet, addFilesToSet, markSetOpened,
     getUser, setPlan, resetData, updateProfile, saveSettings, applyTheme,
-    getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData, awardBadges,
+    getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData, getLeaderboard,
     getFolders, createFolder, moveSetToFolder,
     getSetMastery, setTaskDone, recordActivity, isCardDue, reviewFlashcard, applyTopicResults,
     adjustTopicMastery, setExamDate, buildStudyPlan, createRecording, saveLecture, setCalendarConnected, saveReminders,

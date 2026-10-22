@@ -1,8 +1,8 @@
 /*
  * Profile (app/profile.html). Load after data.js and app.js.
- * Load college-picker.js and badges.js first.
+ * Load college-picker.js first.
  * A bento grid: identity (with Edit profile and Settings), study heatmap
- * (hero), stats, mastery by set, badges, plan and billing, invite friends,
+ * (hero), stats, mastery by set, friends leaderboard, plan and billing, invite friends,
  * account. Settings open in a modal from the gear on the identity tile.
  */
 (function () {
@@ -336,7 +336,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Stats, mastery, badges
+  // Stats, mastery
   // ---------------------------------------------------------------------------
 
   function statsHtml() {
@@ -419,7 +419,8 @@
       </section>`;
   }
 
-  let copyTimer;
+  // Copies the invite link. Used by the Invite tile and the leaderboard's
+  // "Invite friends to compete" button; each keeps its own label.
   async function copyInvite(button) {
     const input = main.querySelector("#invite-link");
     try {
@@ -427,15 +428,126 @@
     } catch (err) {
       input.select();
       document.execCommand("copy"); // file:// pages may not get the async clipboard
+      button.focus();
     }
     const label = button.querySelector("[data-copy-label]");
+    label.dataset.idle = label.dataset.idle || label.textContent;
     label.textContent = "Copied";
     button.classList.add("is-copied");
-    clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => {
-      label.textContent = "Copy";
+    clearTimeout(button.copyTimer);
+    button.copyTimer = setTimeout(() => {
+      label.textContent = label.dataset.idle;
       button.classList.remove("is-copied");
     }, 2000);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Leaderboard: the user and their friends, by points
+  // ---------------------------------------------------------------------------
+
+  const LEADER_VISIBLE = 7; // podium (3) + ranks 4–7; the user's row is pinned below if lower
+  const LEADER_PREF = "skipxam.leaderRange";
+  const AVATAR_TINTS = ["#E0673A", "#3FB8AF", "#4FA3D9", "#A78BFA", "#D9A52A", "#E07A9B", "#6FBF73"];
+  let leaderRange = "week";
+  try { if (localStorage.getItem(LEADER_PREF) === "all") leaderRange = "all"; } catch (err) { /* per-viewer pref only */ }
+
+  function leaderAvatarHtml(entry) {
+    const tint = AVATAR_TINTS[[...entry.id].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_TINTS.length];
+    return `<span class="lb-avatar${entry.isYou ? " is-you" : ""}" style="--av: ${tint}" aria-hidden="true">${avatarInnerHtml(entry)}</span>`;
+  }
+
+  const pointsText = (n) => `${n.toLocaleString("en-IN")} pts`;
+  const nameText = (entry) => (entry.isYou ? `${escapeHtml(entry.name)} <span class="lb-you">(you)</span>` : escapeHtml(entry.name));
+
+  function changeHtml(change) {
+    const n = Math.abs(change);
+    if (!change) return '<span class="lb-change is-same"><span aria-hidden="true">–</span><span class="visually-hidden">Same place as last week</span></span>';
+    const up = change > 0;
+    return `<span class="lb-change ${up ? "is-up" : "is-down"}">
+      <svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="${up ? "M5 1.5 9 8H1z" : "M5 8.5 1 2h8z"}" fill="currentColor"/></svg><span aria-hidden="true">${n}</span>
+      <span class="visually-hidden">${up ? "Up" : "Down"} ${n} ${n === 1 ? "place" : "places"} since last week</span></span>`;
+  }
+
+  function rowHtml(entry, pinned) {
+    return `
+      <li class="lb-row${entry.isYou ? " is-you" : ""}${pinned ? " is-pinned" : ""}"${entry.isYou ? ' aria-current="true"' : ""}>
+        <span class="lb-rank"><span class="visually-hidden">Rank </span>${entry.rank}</span>
+        ${leaderAvatarHtml(entry)}
+        <span class="lb-who">
+          <span class="lb-name">${nameText(entry)}</span>
+          <span class="lb-college">${escapeHtml(entry.college)}</span>
+        </span>
+        <span class="lb-points">${pointsText(entry.points)}</span>
+        ${changeHtml(entry.change)}
+      </li>`;
+  }
+
+  // DOM order is 1, 2, 3 for screen readers; CSS shows 2, 1, 3.
+  function podiumHtml(top) {
+    return `
+      <ol class="lb-podium" aria-label="Top 3">
+        ${top.map((entry) => `
+          <li class="lb-spot is-${entry.rank}${entry.isYou ? " is-you" : ""}"${entry.isYou ? ' aria-current="true"' : ""}>
+            ${leaderAvatarHtml(entry)}
+            <span class="lb-spot-name">${nameText(entry)}</span>
+            <span class="lb-spot-points">${pointsText(entry.points)}</span>
+            <span class="lb-step"><span class="visually-hidden">Rank </span>${entry.rank}</span>
+          </li>`).join("")}
+      </ol>`;
+  }
+
+  function inviteToCompeteHtml(friendCount) {
+    return `
+      <div class="lb-invite">
+        <p class="lb-invite-title">Invite friends to compete</p>
+        <p class="muted">${friendCount ? `You have ${friendCount} ${friendCount === 1 ? "friend" : "friends"} here.` : "No friends here yet."} Add at least 3 to see who studies most each week.</p>
+        <button type="button" class="btn btn-primary btn-sm" data-copy-invite>${icon("copy")}<span data-copy-label>Copy invite link</span></button>
+      </div>`;
+  }
+
+  function leaderBodyHtml() {
+    const board = getLeaderboard(leaderRange);
+    const { entries } = board;
+    if (board.friendCount < 3) {
+      return `${inviteToCompeteHtml(board.friendCount)}
+        <ol class="lb-list">${entries.map((e) => rowHtml(e)).join("")}</ol>`;
+    }
+    const you = entries.find((e) => e.isYou);
+    const rest = entries.slice(3, LEADER_VISIBLE);
+    const pin = you.rank > LEADER_VISIBLE;
+    return `
+      ${podiumHtml(entries.slice(0, 3))}
+      <ol class="lb-list">
+        ${rest.map((e) => rowHtml(e)).join("")}
+        ${pin ? `<li class="lb-gap" aria-hidden="true"><span></span></li>${rowHtml(you, true)}` : ""}
+      </ol>`;
+  }
+
+  function leaderboardHtml() {
+    const radio = (value, label) => `<label><input type="radio" name="leaderRange" value="${value}"${leaderRange === value ? " checked" : ""}><span>${label}</span></label>`;
+    return `
+      <section class="card tile p-leader" aria-labelledby="leader-title">
+        <div class="lb-head">
+          <h2 class="tile-title" id="leader-title">Leaderboard</h2>
+          <fieldset class="segmented" aria-label="Leaderboard period">
+            ${radio("week", "This week")}${radio("all", "All time")}
+          </fieldset>
+        </div>
+        <p class="muted lb-note" data-leader-note>${leaderNote()}</p>
+        <div class="lb-body" data-leader-body>${leaderBodyHtml()}</div>
+        <p class="muted lb-rules">1 point per focus minute and flashcard, 10 per quiz, 25 per lesson.</p>
+      </section>`;
+  }
+
+  function leaderNote() {
+    return leaderRange === "week" ? "You and your friends this week. Resets every Monday." : "You and your friends since you joined.";
+  }
+
+  function setLeaderRange(value) {
+    leaderRange = value === "all" ? "all" : "week";
+    try { localStorage.setItem(LEADER_PREF, leaderRange); } catch (err) { /* per-viewer pref only */ }
+    main.querySelector("[data-leader-body]").innerHTML = leaderBodyHtml();
+    main.querySelector("[data-leader-note]").textContent = leaderNote();
   }
 
   // ---------------------------------------------------------------------------
@@ -590,7 +702,7 @@
       title: "Delete account?",
       body: `
         <form>
-          <p class="muted">This deletes your study sets, notes, progress and badges. It can't be undone.</p>
+          <p class="muted">This deletes your study sets, notes, progress and points. It can't be undone.</p>
           <div class="field">
             <label class="field-label" for="del-confirm">Type <strong>DELETE</strong> to confirm</label>
             <input class="input" id="del-confirm" autocomplete="off" spellcheck="false" autofocus>
@@ -625,7 +737,7 @@
         ${heatmapHtml()}
         ${statsHtml()}
         ${masteryHtml()}
-        ${badgesTileHtml()}
+        ${leaderboardHtml()}
         ${planHtml(user)}
         ${inviteHtml(user)}
         ${accountHtml(user)}
@@ -661,6 +773,7 @@
 
   main.addEventListener("change", async (event) => {
     const t = event.target;
+    if (t.name === "leaderRange") return setLeaderRange(t.value);
     if (t.matches("[data-avatar-input]")) {
       const file = t.files && t.files[0];
       if (!file) return;
@@ -703,5 +816,4 @@
   });
 
   render();
-  bindBadges(main);
 })();

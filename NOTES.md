@@ -22,7 +22,7 @@ css/app.css        Shared styles: base, buttons, cards, inputs, modals/sheets, a
                    effects (.glass, .dot-grid, .orb, .gradient-border), pricing modal, toast, dev toggle
 css/<page>.css     One stylesheet per page
 js/data.js         Mock data + every data helper (sets, topics, plan, flashcards, activity log, profile,
-                   settings, streaks, badges). Seeding, v7 migration, applyTheme()
+                   settings, streaks, leaderboard points). Seeding, v7 migration, applyTheme()
 js/app.js          Shared UI: icons, helpers, openModal/confirmDialog, toasts, openUpgrade (pricing modal),
                    proGate, openCreateSet, app shell (sidebar, top bar, tab bar, drawer), menuSelect,
                    search/share/materials sheets, study timer, dev plan toggle
@@ -30,7 +30,6 @@ js/<page>.js       Page logic (one per page)
 js/college-picker.js   Searchable college picker (profile edit modal)
 js/tutor-chat.js   Tutor chat component (tutor page + side tutor panel): mock replies, models, voice typing,
                    read aloud, voice call. css/tutor-chat.css holds its styles.
-js/badges.js       Badge definitions, SVG emblems, badge detail card
 js/notes-content.js  Seed document for the notes editor: Java notes HTML, auto stickies, source-star quotes
 assets/sample.pdf  Mock Java lecture notes (7 pages) that the notes' source stars point into
 assets/sample-pdf-source.html  HTML the PDF is printed from (rebuild steps are in its header comment)
@@ -41,7 +40,7 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
                    record, plan, calendar, tutor, profile, style-test (effects review page)
 ```
 
-**Page template.** Every app page loads `tokens.css`, `app.css` and its page CSS, then `data.js`, `app.js` and its page JS. Profile also loads `college-picker.js` and `badges.js` before `profile.js`.
+**Page template.** Every app page loads `tokens.css`, `app.css` and its page CSS, then `data.js`, `app.js` and its page JS. Profile also loads `college-picker.js` before `profile.js`.
 
 ## 3. Features built
 
@@ -144,11 +143,13 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - **Settings modal:** daily goal slider (15–120 minutes), reminder time, Google Calendar (mock), notifications switch, dark/light theme. Changes save as you make them.
 - **Study activity:** 16-week heatmap with current and longest streak and days studied. Hover, or use the arrow keys, to read each day.
 - **Your numbers, and Mastery by set** (weakest first, each linking to its set).
-- **Badges (2×2):** 12 SVG emblems.
-  - Shape by family: hexagon for streaks, shield for quizzes and tests, circle for flashcards, diamond for special.
-  - Tier ring: bronze, silver, gold or legend.
-  - Locked badges show a progress ring.
-  - Clicking opens a glass detail card: a popover on desktop, centred on mobile.
+- **Leaderboard (2×2):** the user ranked among their friends by points.
+  - Points: 1 per focus minute, 10 per quiz completed, 1 per flashcard reviewed, 25 per lesson completed (a lesson's first finish only). Added in `addStudyMinute`, `recordQuizScore`, `reviewFlashcard` and `completeLesson`.
+  - Stored in `user.points` (`{ weekStart, week, lastWeek, allTime }`). The week resets when a new Monday comes round (`rollWeek`), moving this week's total into `lastWeek`.
+  - Mock friends in `user.friends` (`SEED_FRIENDS` in `data.js`): each has a daily `rate` (their week total is rate × days since Monday), `lastWeek` and `allTimeBefore`.
+  - `getLeaderboard("week" | "all")` returns everyone ranked, with `change` against last week's rank (week: last week's points; all time: all-time points before this week).
+  - This week / All time toggle (remembered in `skipxam.leaderRange`). Top 3 on a podium (2nd, 1st, 3rd; DOM order 1, 2, 3), then ranks 4–7 with initials avatar, name, college, points and an up/down arrow. The user's row is highlighted, and pinned at the bottom when they rank below 7th.
+  - Fewer than 3 friends: "Invite friends to compete" with a copy-link button, above the short list.
 - **Plan and billing:** "Manage plan" opens the pricing modal; "Cancel plan" asks for confirmation first.
 - **Study with your friends:** Copy button that changes to "Copied" for 2 seconds, WhatsApp share, and referral stats.
 - **Account:** email, change password (mock), download my data (JSON), log out (mock), delete account (type DELETE; this resets to the demo data).
@@ -197,7 +198,7 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - Keep the SkipXam colours: dark background, off-white text, amber accent.
 - Responsive. Check pages at 375px and 1440px, keep keyboard focus visible, respect reduced motion.
 - In consistency reviews, "only fix what's inconsistent; don't redesign".
-- No emojis in badges; use SVG emblems.
+- No emojis in badges; use SVG emblems. (The profile badges were removed in favour of the leaderboard.)
 - Tiles stay solid (no glass) so text is readable.
 - Prices in ₹.
 - Commit and push only when asked.
@@ -217,4 +218,4 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - **Mock-data quirks:** the seeded activity times are relative to page load, so some time-based checks vary. College types in `colleges.json` were written from memory; verify them.
 - **Clipped shadows:** horizontal scroll rows (Recent materials, the set row) clip card shadows.
 - **Two copies of the college list:** `colleges.js` must be regenerated whenever `colleges.json` changes. Only the `file://` fallback uses it.
-- **Headless Edge testing quirks:** CSS animations on elements added late can stay stuck at frame 0, and a resize event fires during screenshots. Because of this, the badge card has no open animation and repositions on resize instead of closing.
+- **Headless Edge testing quirks:** CSS animations on elements added late can stay stuck at frame 0, and a resize event fires during screenshots.
