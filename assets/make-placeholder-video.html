@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make the placeholder video</title>
+  <!--
+    Records assets/videos/explainer-placeholder.mp4, the stand-in for every
+    generated video on app/videos.html (the page shows captions on top).
+
+    Open this file over http (python -m http.server, then
+    http://localhost:8000/assets/make-placeholder-video.html) in a recent
+    Chrome or Edge (it needs WebCodecs, and loads mp4-muxer from jsDelivr),
+    click Record (it encodes 60 s of frames in a few seconds), then Download
+    and save it as assets/videos/explainer-placeholder.mp4.
+  -->
+  <style>
+    body { margin: 24px; background: #0f0e0d; color: #f0eae0; font: 15px system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; border: 1px solid #2e2a26; }
+    button { margin: 12px 8px 0 0; padding: 8px 16px; font: inherit; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <canvas width="640" height="360"></canvas>
+  <button type="button" id="record">Record</button>
+  <button type="button" id="download" disabled>Download</button>
+  <p id="status" role="status"></p>
+  <script>
+    const LENGTH = 60;
+    const canvas = document.querySelector("canvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const status = document.getElementById("status");
+    let blob = null;
+
+    const SCENES = [
+      { kind: "title", heading: "AI explainer", sub: "Your study set, explained" },
+      { kind: "bars", heading: "Key idea 1" },
+      { kind: "circles", heading: "How it connects" },
+      { kind: "bars", heading: "Key idea 2" },
+      { kind: "flow", heading: "Step by step" },
+      { kind: "title", heading: "Recap", sub: "Test yourself in the quiz" },
+    ];
+
+    const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+    const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+    function frame(t) {
+      const sceneLen = LENGTH / SCENES.length;
+      const i = Math.min(SCENES.length - 1, Math.floor(t / sceneLen));
+      const scene = SCENES[i];
+      const p = (t - i * sceneLen) / sceneLen; // 0..1 within the scene
+
+      // Background with a slow amber glow.
+      ctx.fillStyle = "#0f0e0d";
+      ctx.fillRect(0, 0, W, H);
+      const gx = W * (0.3 + 0.4 * Math.sin(t / 9));
+      const g = ctx.createRadialGradient(gx, H * 0.35, 10, gx, H * 0.35, 320);
+      g.addColorStop(0, "rgba(224,138,56,0.28)");
+      g.addColorStop(1, "rgba(224,138,56,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // Wordmark and label.
+      ctx.font = "800 18px system-ui, sans-serif";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#f0eae0";
+      ctx.fillText("Skip", 22, 18);
+      ctx.fillStyle = "#e08a38";
+      ctx.fillText("Xam", 22 + ctx.measureText("Skip").width, 18);
+      ctx.font = "600 12px system-ui, sans-serif";
+      ctx.fillStyle = "#a39b8f";
+      ctx.textAlign = "right";
+      ctx.fillText("PLACEHOLDER VIDEO", W - 22, 22);
+      ctx.textAlign = "left";
+
+      // Scene heading.
+      const a = ease(p * 4);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = "#f0eae0";
+      ctx.textAlign = "center";
+      ctx.font = `800 ${scene.kind === "title" ? 40 : 26}px system-ui, sans-serif`;
+      ctx.fillText(scene.heading, W / 2, scene.kind === "title" ? 130 : 64 + (1 - a) * 10);
+      if (scene.sub) {
+        ctx.font = "500 18px system-ui, sans-serif";
+        ctx.fillStyle = "#a39b8f";
+        ctx.fillText(scene.sub, W / 2, 186);
+      }
+      ctx.textAlign = "left";
+      ctx.globalAlpha = 1;
+
+      // Scene body.
+      if (scene.kind === "bars") {
+        for (let k = 0; k < 4; k++) {
+          const w = ease(p * 3 - k * 0.4) * (300 - k * 40);
+          ctx.fillStyle = k === 0 ? "#e08a38" : "#2e2a26";
+          ctx.beginPath();
+          ctx.arc(W / 2 - 170, 134 + k * 40, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = k === 0 ? "rgba(224,138,56,0.85)" : "#3a3530";
+          ctx.fillRect(W / 2 - 150, 128 + k * 40, w, 12);
+        }
+      } else if (scene.kind === "circles") {
+        const cols = ["#e08a38", "#3FB8AF", "#A78BFA"];
+        cols.forEach((c, k) => {
+          const r = 34 + 6 * Math.sin(t * 2 + k);
+          const x = W / 2 + (k - 1) * 130;
+          ctx.globalAlpha = ease(p * 3 - k * 0.5);
+          ctx.strokeStyle = c;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(x, 190, r, 0, Math.PI * 2);
+          ctx.stroke();
+          if (k) {
+            ctx.strokeStyle = "#5a524a";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 130 + 44, 190);
+            ctx.lineTo(x - 44, 190);
+            ctx.stroke();
+          }
+        });
+        ctx.globalAlpha = 1;
+      } else if (scene.kind === "flow") {
+        for (let k = 0; k < 4; k++) {
+          const x = 90 + k * 130;
+          ctx.globalAlpha = ease(p * 4 - k * 0.6);
+          ctx.fillStyle = k === Math.floor(p * 4) ? "#e08a38" : "#2a2622";
+          ctx.fillRect(x, 160, 96, 56);
+          ctx.fillStyle = k === Math.floor(p * 4) ? "#0f0e0d" : "#f0eae0";
+          ctx.font = "800 22px system-ui, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(String(k + 1), x + 48, 176);
+          ctx.textAlign = "left";
+          if (k < 3) {
+            ctx.fillStyle = "#5a524a";
+            ctx.fillRect(x + 100, 186, 26, 4);
+          }
+        }
+        ctx.globalAlpha = 1;
+      } else {
+        // Title scene: a pulsing ring.
+        ctx.strokeStyle = "rgba(224,138,56,0.6)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(W / 2, 250, 18 + 6 * Math.sin(t * 3), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Time code under the label (top right, clear of the player's controls
+      // and captions), so seeking is easy to see.
+      ctx.font = "700 13px system-ui, sans-serif";
+      ctx.fillStyle = "#a39b8f";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "top";
+      ctx.fillText(clock(t), W - 22, 40);
+      ctx.textAlign = "left";
+    }
+
+    // Encodes every frame with WebCodecs (H.264), faster than real time and
+    // with exact timestamps, then muxes a normal MP4 (moov first, so it has a
+    // duration and seeks) with mp4-muxer.
+    const FPS = 30;
+    async function record() {
+      if (!("VideoEncoder" in window)) {
+        status.textContent = "This browser has no WebCodecs. Use a recent Chrome or Edge.";
+        throw new Error("No WebCodecs");
+      }
+      status.textContent = "Encoding…";
+      if (!window.Mp4Muxer) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js";
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const muxer = new Mp4Muxer.Muxer({
+        target: new Mp4Muxer.ArrayBufferTarget(),
+        video: { codec: "avc", width: W, height: H, frameRate: FPS },
+        fastStart: "in-memory",
+      });
+      let failed = null;
+      const encoder = new VideoEncoder({
+        output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+        error: (err) => { failed = err; },
+      });
+      encoder.configure({ codec: "avc1.42001f", width: W, height: H, bitrate: 400000, framerate: FPS, avc: { format: "avc" } });
+      const total = LENGTH * FPS;
+      for (let i = 0; i < total; i++) {
+        frame(i / FPS);
+        const vf = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
+        encoder.encode(vf, { keyFrame: i % (FPS * 2) === 0 }); // a keyframe every 2 s keeps seeking quick
+        vf.close();
+        if (encoder.encodeQueueSize > 30) await new Promise((r) => setTimeout(r, 5));
+        if (failed) throw failed;
+        if (i % FPS === 0) status.textContent = `Encoding… ${Math.round((i / total) * 100)}%`;
+      }
+      await encoder.flush();
+      muxer.finalize();
+      blob = new Blob([muxer.target.buffer], { type: "video/mp4" });
+      status.textContent = `Done: ${(blob.size / 1024).toFixed(0)} KB`;
+      document.getElementById("download").disabled = false;
+      return blob;
+    }
+
+    // Used by an automated run: resolves to the video as base64.
+    window.recordToBase64 = async () => {
+      const b = await record();
+      const buf = new Uint8Array(await b.arrayBuffer());
+      let s = "";
+      for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+      return { type: b.type, base64: btoa(s) };
+    };
+
+    document.getElementById("record").addEventListener("click", record);
+    document.getElementById("download").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "explainer-placeholder.mp4";
+      a.click();
+    });
+    frame(0);
+  </script>
+</body>
+</html>

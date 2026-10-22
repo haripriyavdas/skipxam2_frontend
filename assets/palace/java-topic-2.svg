@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+<rect width="800" height="500" fill="#2f3a36"/>
+<polygon points="0,500 120,380 680,380 800,500" fill="#4d4a3c"/>
+<polygon points="0,0 120,60 120,380 0,500" fill="#000" opacity=".18"/>
+<polygon points="800,0 680,60 680,380 800,500" fill="#000" opacity=".12"/>
+<line x1="120" y1="60" x2="680" y2="60" stroke="#000" stroke-opacity=".2" stroke-width="2"/>
+<ellipse cx="400" cy="440" rx="220" ry="34" fill="#d9a52a" opacity=".25"/>
+<rect x="120" y="270" width="380" height="110" fill="#6b5a48"/><rect x="120" y="258" width="380" height="16" fill="#cbbfa9"/><rect x="560" y="150" width="120" height="230" rx="10" fill="#d8d2c6"/><rect x="664" y="200" width="6" height="40" fill="#8a8172"/><circle cx="260" cy="244" r="24" fill="#d9a52a"/><rect x="236" y="244" width="48" height="12" fill="#3a2f26"/>
+<text x="784" y="488" text-anchor="end" font-family="Arial, sans-serif" font-size="13" fill="#f0eae0" opacity=".6">Placeholder image</text>
+</svg>

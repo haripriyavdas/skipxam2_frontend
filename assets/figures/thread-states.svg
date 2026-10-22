@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="800" height="460">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#3a342c"/></marker></defs>
+<rect width="800" height="460" fill="#f7f3ea"/>
+<path d="M138 230 Q191 230 244 230" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M338 202 Q417 171 477 109" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M478 108 Q399 139 339 201" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M346 230 Q407 248 468 230" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M470 230 Q409 212 348 230" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M338 258 Q397 319 477 351" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M478 352 Q419 291 339 259" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<path d="M336 202 C 430 150 610 150 676 206" fill="none" stroke="#3a342c" stroke-width="2" marker-end="url(#ah)"/>
+<circle cx="88" cy="230" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="296" cy="230" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="520" cy="80" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="520" cy="230" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="520" cy="380" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="720" cy="230" r="48" fill="#ece4d3" stroke="#3a342c" stroke-width="2"/>
+<circle cx="720" cy="230" r="40" fill="none" stroke="#3a342c" stroke-width="1.5"/>
+<text x="400" y="450" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="#3a342c">Fig. 7.1</text>
+</svg>

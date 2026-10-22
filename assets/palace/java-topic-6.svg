@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+<rect width="800" height="500" fill="#26323d"/>
+<polygon points="0,500 120,380 680,380 800,500" fill="#3f3a35"/>
+<polygon points="0,0 120,60 120,380 0,500" fill="#000" opacity=".18"/>
+<polygon points="800,0 680,60 680,380 800,500" fill="#000" opacity=".12"/>
+<line x1="120" y1="60" x2="680" y2="60" stroke="#000" stroke-opacity=".2" stroke-width="2"/>
+<ellipse cx="400" cy="440" rx="220" ry="34" fill="#3fb8af" opacity=".25"/>
+<rect x="100" y="70" width="600" height="180" fill="#3fb8af" opacity=".35"/><circle cx="600" cy="130" r="34" fill="#f5d38a"/><rect x="100" y="240" width="600" height="12" fill="#cbbfa9"/><rect x="110" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="150" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="190" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="230" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="270" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="310" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="350" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="390" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="430" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="470" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="510" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="550" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="590" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="630" y="250" width="8" height="130" fill="#cbbfa9"/><rect x="670" y="250" width="8" height="130" fill="#cbbfa9"/>
+<text x="784" y="488" text-anchor="end" font-family="Arial, sans-serif" font-size="13" fill="#f0eae0" opacity=".6">Placeholder image</text>
+</svg>

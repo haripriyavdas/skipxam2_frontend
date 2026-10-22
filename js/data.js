@@ -80,6 +80,32 @@
     return withIds(`${setId}-dg`, rows.map(({ topic, ...d }) => ({ topicId: topicId(setId, topic), ...d })));
   }
 
+  // visuals("java", [{ type, topic, page, title, spec | mermaid }, ...]) for Visual memory.
+  // type: concept | flowchart | hierarchy | timeline | comparison | graph | formula |
+  // figure | mnemonic | palace. page is the source PDF page. Rendered on the page,
+  // never stored as images (figure and palace point at placeholder images in assets/).
+  function visuals(setId, rows) {
+    return withIds(`${setId}-vis`, rows.map(({ topic, ...v }) => ({ topicId: topicId(setId, topic), ...v })));
+  }
+
+  // Videos page. Every generated video plays this placeholder file (60 s);
+  // the page shows the captions on top and ends each video at its duration.
+  const VIDEO_FILE = "assets/videos/explainer-placeholder.mp4";
+
+  // generatedVideos("java", { full: { title, duration, captions }, topics: [{ topic, ... }] })
+  // → { full, topics } with ids. captions: [[seconds, text], ...].
+  function generatedVideos(setId, { full, topics }) {
+    return {
+      full: { id: `${setId}-vid-full`, topicId: null, ...full },
+      topics: topics.map(({ topic, ...v }) => ({ id: `${setId}-vid-${topic}`, topicId: topicId(setId, topic), ...v })),
+    };
+  }
+
+  // youtubeVideos("java", [{ id, topic, title, channel, duration }, ...]). id is the YouTube video id.
+  function youtubeVideos(setId, rows) {
+    return rows.map(({ topic, ...v }) => ({ ...v, topicId: topic ? topicId(setId, topic) : null }));
+  }
+
   // written("java", [{ topic, question, marks, keyPoints, modelAnswer }, ...])
   // For the university-paper practice test. Answers are mock-marked by how many
   // keyPoints (short terms, matched case-insensitively) they mention.
@@ -223,6 +249,514 @@
       {"topic": 4, "title": "JVM architecture", "labels": ["Class loader", "Method area", "Heap", "Stack", "Execution engine", "JIT compiler"]},
       {"topic": 6, "title": "Thread life cycle", "labels": ["New", "Runnable", "Blocked", "Waiting", "Terminated"]},
       {"topic": 5, "title": "Collections hierarchy", "labels": ["Collection", "List", "Set", "Queue", "Map"]},
+    ]),
+    // Visual memory specs, rendered on the page (see visuals() above).
+    visuals: visuals("java", [
+      // ---- Concept maps: nodes + edges. Tree edges give each node its children;
+      // edges with cross: true are extra links drawn once both ends are shown.
+      { type: "concept", topic: 1, page: 3, title: "The four pillars of OOP", spec: {
+        nodes: [
+          { id: "oop", label: "OOP" },
+          { id: "enc", label: "Encapsulation" }, { id: "inh", label: "Inheritance" },
+          { id: "poly", label: "Polymorphism" }, { id: "abs", label: "Abstraction" },
+          { id: "priv", label: "private fields" }, { id: "gs", label: "Getters and setters" }, { id: "hide", label: "Data hiding" },
+          { id: "ext", label: "extends" }, { id: "sup", label: "super" }, { id: "single", label: "Single inheritance" },
+          { id: "ovl", label: "Overloading" }, { id: "ovr", label: "Overriding" }, { id: "dmd", label: "Dynamic dispatch" },
+          { id: "ac", label: "Abstract class" }, { id: "intf", label: "Interface" },
+        ],
+        edges: [
+          { from: "oop", to: "enc", label: "pillar" }, { from: "oop", to: "inh", label: "pillar" },
+          { from: "oop", to: "poly", label: "pillar" }, { from: "oop", to: "abs", label: "pillar" },
+          { from: "enc", to: "priv", label: "uses" }, { from: "enc", to: "gs", label: "exposes via" }, { from: "enc", to: "hide", label: "gives" },
+          { from: "inh", to: "ext", label: "keyword" }, { from: "inh", to: "sup", label: "parent via" }, { from: "inh", to: "single", label: "limit" },
+          { from: "poly", to: "ovl", label: "compile time" }, { from: "poly", to: "ovr", label: "runtime" }, { from: "ovr", to: "dmd", label: "resolved by" },
+          { from: "abs", to: "ac", label: "with" }, { from: "abs", to: "intf", label: "with" },
+          { from: "ovr", to: "inh", label: "needs", cross: true },
+        ],
+      } },
+      { type: "concept", topic: 3, page: 5, title: "Exceptions at a glance", spec: {
+        nodes: [
+          { id: "thr", label: "Throwable" },
+          { id: "err", label: "Error" }, { id: "exc", label: "Exception" }, { id: "hand", label: "Handling" },
+          { id: "oom", label: "OutOfMemoryError" }, { id: "soe", label: "StackOverflowError" },
+          { id: "chk", label: "Checked" }, { id: "unc", label: "Unchecked" },
+          { id: "ioe", label: "IOException" }, { id: "sql", label: "SQLException" },
+          { id: "npe", label: "NullPointerException" }, { id: "ari", label: "ArithmeticException" },
+          { id: "try", label: "try" }, { id: "catch", label: "catch" }, { id: "fin", label: "finally" }, { id: "throws", label: "throws" },
+        ],
+        edges: [
+          { from: "thr", to: "err", label: "is-a" }, { from: "thr", to: "exc", label: "is-a" }, { from: "thr", to: "hand", label: "dealt with by" },
+          { from: "err", to: "oom", label: "e.g." }, { from: "err", to: "soe", label: "e.g." },
+          { from: "exc", to: "chk", label: "kind" }, { from: "exc", to: "unc", label: "kind" },
+          { from: "chk", to: "ioe", label: "e.g." }, { from: "chk", to: "sql", label: "e.g." },
+          { from: "unc", to: "npe", label: "e.g." }, { from: "unc", to: "ari", label: "e.g." },
+          { from: "hand", to: "try", label: "risky code" }, { from: "hand", to: "catch", label: "handles" },
+          { from: "hand", to: "fin", label: "always runs" }, { from: "hand", to: "throws", label: "declares" },
+          { from: "chk", to: "throws", label: "catch or", cross: true },
+        ],
+      } },
+      { type: "concept", topic: 5, page: 6, title: "Collections Framework", spec: {
+        nodes: [
+          { id: "cf", label: "Collections" },
+          { id: "list", label: "List" }, { id: "set", label: "Set" }, { id: "queue", label: "Queue" }, { id: "map", label: "Map" },
+          { id: "al", label: "ArrayList" }, { id: "ll", label: "LinkedList" },
+          { id: "hs", label: "HashSet" }, { id: "ts", label: "TreeSet" },
+          { id: "pq", label: "PriorityQueue" }, { id: "ad", label: "ArrayDeque" },
+          { id: "hm", label: "HashMap" }, { id: "tm", label: "TreeMap" },
+        ],
+        edges: [
+          { from: "cf", to: "list", label: "ordered" }, { from: "cf", to: "set", label: "unique" },
+          { from: "cf", to: "queue", label: "FIFO" }, { from: "cf", to: "map", label: "key → value" },
+          { from: "list", to: "al", label: "array" }, { from: "list", to: "ll", label: "nodes" },
+          { from: "set", to: "hs", label: "hashing" }, { from: "set", to: "ts", label: "sorted" },
+          { from: "queue", to: "pq", label: "by priority" }, { from: "queue", to: "ad", label: "both ends" },
+          { from: "map", to: "hm", label: "hashing" }, { from: "map", to: "tm", label: "sorted keys" },
+          { from: "hs", to: "hm", label: "backed by", cross: true },
+        ],
+      } },
+
+      // ---- Mermaid: flowcharts, hierarchies and timelines.
+      { type: "flowchart", topic: 3, page: 5, title: "How try, catch and finally run", mermaid: [
+        "flowchart TD",
+        "  A([\"Run the try block\"]) --> B{\"Exception thrown?\"}",
+        "  B -- No --> C[\"Finish the try block\"]",
+        "  B -- Yes --> D{\"Matching catch?\"}",
+        "  D -- Yes --> E[\"Run the catch block\"]",
+        "  D -- No --> F[\"Run finally\"]",
+        "  F --> G([\"Exception goes to the caller\"])",
+        "  C --> H[\"Run finally\"]",
+        "  E --> H",
+        "  H --> I([\"Carry on after try\"])",
+      ].join("\n") },
+      { type: "flowchart", topic: 4, page: 1, title: "From source code to a running program", mermaid: [
+        "flowchart LR",
+        "  A[\"Hello.java\"] -->|javac| B[\"Bytecode (.class)\"]",
+        "  B --> C[\"Class loader\"]",
+        "  C --> D[\"Bytecode verifier\"]",
+        "  D --> E{\"Hot code?\"}",
+        "  E -- No --> F[\"Interpreter\"]",
+        "  E -- Yes --> G[\"JIT compiler\"]",
+        "  G --> H[\"Native machine code\"]",
+      ].join("\n") },
+      { type: "flowchart", topic: 6, page: 7, title: "Thread life cycle", mermaid: [
+        "flowchart LR",
+        "  N([\"New\"]) -->|start| R[\"Runnable\"]",
+        "  R -->|waits for a lock| B[\"Blocked\"]",
+        "  B -->|gets the lock| R",
+        "  R -->|wait or join| W[\"Waiting\"]",
+        "  W -->|notify| R",
+        "  R -->|sleep| T[\"Timed waiting\"]",
+        "  T -->|time up| R",
+        "  R -->|run ends| X([\"Terminated\"])",
+      ].join("\n") },
+      { type: "hierarchy", topic: 3, page: 5, title: "Exception class hierarchy", mermaid: [
+        "flowchart TD",
+        "  T[\"Throwable\"] --> E[\"Error\"]",
+        "  T --> X[\"Exception\"]",
+        "  E --> OOM[\"OutOfMemoryError\"]",
+        "  E --> SO[\"StackOverflowError\"]",
+        "  X --> IO[\"IOException\"]",
+        "  X --> SQL[\"SQLException\"]",
+        "  X --> RT[\"RuntimeException\"]",
+        "  RT --> NPE[\"NullPointerException\"]",
+        "  RT --> AE[\"ArithmeticException\"]",
+        "  RT --> AI[\"ArrayIndexOutOfBoundsException\"]",
+        "  classDef checked stroke:#e08a38,stroke-width:2px",
+        "  classDef unchecked stroke:#3FB8AF,stroke-width:2px",
+        "  class IO,SQL checked",
+        "  class RT,NPE,AE,AI unchecked",
+      ].join("\n"), legend: [{ colour: "#e08a38", label: "Checked" }, { colour: "#3FB8AF", label: "Unchecked" }] },
+      { type: "hierarchy", topic: 5, page: 6, title: "Collection interfaces and classes", mermaid: [
+        "flowchart TD",
+        "  IT[\"Iterable\"] --> C[\"Collection\"]",
+        "  C --> L[\"List\"]",
+        "  C --> S[\"Set\"]",
+        "  C --> Q[\"Queue\"]",
+        "  L --> AL[\"ArrayList\"]",
+        "  L --> LL[\"LinkedList\"]",
+        "  S --> HS[\"HashSet\"]",
+        "  S --> TS[\"TreeSet\"]",
+        "  Q --> PQ[\"PriorityQueue\"]",
+        "  Q --> DQ[\"Deque\"]",
+        "  DQ --> AD[\"ArrayDeque\"]",
+        "  DQ -.-> LL",
+        "  M[\"Map\"] --> HM[\"HashMap\"]",
+        "  M --> TM[\"TreeMap\"]",
+      ].join("\n") },
+      { type: "hierarchy", topic: 1, page: 3, title: "Inheritance in an example", mermaid: [
+        "flowchart TD",
+        "  O[\"Object\"] --> A[\"Animal (abstract)\"]",
+        "  A --> D[\"Dog\"]",
+        "  A --> C[\"Cat\"]",
+        "  P[\"Pet (interface)\"] -.->|implements| D",
+        "  P -.->|implements| C",
+      ].join("\n") },
+      { type: "timeline", topic: 4, page: 1, title: "The Java platform over time", mermaid: [
+        "timeline",
+        "  1996 : Java 1.0 : Write once, run anywhere",
+        "  2000 : Java 1.3 : HotSpot JVM becomes the default",
+        "  2006 : OpenJDK : The JDK goes open source",
+        "  2017 : Java 9 : Module system",
+        "  2018 : Java 11 : Long-term support release",
+      ].join("\n") },
+      { type: "timeline", topic: 5, page: 6, title: "Collections through the versions", mermaid: [
+        "timeline",
+        "  1998 : Java 1.2 : Collections Framework",
+        "  2004 : Java 5 : Generics : for-each loop",
+        "  2014 : Java 8 : Streams and lambdas",
+        "  2017 : Java 9 : List.of and Map.of",
+        "  2021 : Java 16 : Stream.toList",
+      ].join("\n") },
+      { type: "timeline", topic: 6, page: 7, title: "Concurrency through the versions", mermaid: [
+        "timeline",
+        "  1996 : Java 1.0 : Thread and Runnable : synchronized",
+        "  2004 : Java 5 : java.util.concurrent : ExecutorService",
+        "  2011 : Java 7 : Fork/Join framework",
+        "  2014 : Java 8 : CompletableFuture",
+        "  2023 : Java 21 : Virtual threads",
+      ].join("\n") },
+
+      // ---- Comparisons: matching rows, plus what goes where in the Venn view.
+      { type: "comparison", topic: 5, page: 6, title: "ArrayList vs LinkedList", spec: {
+        left: "ArrayList", right: "LinkedList",
+        rows: [
+          { aspect: "Backed by", left: "Dynamic array", right: "Doubly linked list" },
+          { aspect: "get(i)", left: "O(1), fast", right: "O(n), walks the nodes" },
+          { aspect: "Insert in the middle", left: "O(n), shifts elements", right: "O(1) once at the node" },
+          { aspect: "Memory per element", left: "Less", right: "More, two links per node" },
+          { aspect: "Also implements", left: "RandomAccess", right: "Deque" },
+          { aspect: "Best for", left: "Reading by index", right: "Adding and removing at the ends" },
+        ],
+        venn: {
+          left: ["Random access", "Array inside", "Less memory"],
+          both: ["Implements List", "Keeps order", "Allows duplicates", "Not synchronized"],
+          right: ["Linked nodes", "Implements Deque", "Fast at the ends"],
+        },
+      } },
+      { type: "comparison", topic: 3, page: 5, title: "Checked vs unchecked exceptions", spec: {
+        left: "Checked", right: "Unchecked",
+        rows: [
+          { aspect: "Checked by", left: "The compiler", right: "Nobody until runtime" },
+          { aspect: "Must catch or declare", left: "Yes", right: "No" },
+          { aspect: "Superclass", left: "Exception", right: "RuntimeException" },
+          { aspect: "Example", left: "IOException", right: "NullPointerException" },
+          { aspect: "Usually caused by", left: "Things outside the program", right: "Bugs in the code" },
+        ],
+        venn: {
+          left: ["Compile-time check", "Needs throws", "IOException"],
+          both: ["Subclass of Throwable", "Caught with catch", "finally still runs"],
+          right: ["RuntimeException", "Programming bugs", "NullPointerException"],
+        },
+      } },
+      { type: "comparison", topic: 1, page: 3, title: "Abstract class vs interface", spec: {
+        left: "Abstract class", right: "Interface",
+        rows: [
+          { aspect: "A class can use", left: "Only one", right: "Many" },
+          { aspect: "Keyword", left: "extends", right: "implements" },
+          { aspect: "Fields", left: "Any kind", right: "Constants only" },
+          { aspect: "Constructors", left: "Yes", right: "No" },
+          { aspect: "Methods", left: "Abstract and concrete", right: "Abstract, default and static" },
+        ],
+        venn: {
+          left: ["State", "Constructors", "Single inheritance"],
+          both: ["Can't be instantiated", "Abstract methods", "Gives abstraction"],
+          right: ["Multiple inheritance", "Default methods", "Constants only"],
+        },
+      } },
+      { type: "comparison", topic: 2, page: 4, title: "String vs StringBuilder", spec: {
+        left: "String", right: "StringBuilder",
+        rows: [
+          { aspect: "Can it change?", left: "No, immutable", right: "Yes, mutable" },
+          { aspect: "Each edit makes", left: "A new object", right: "No new object" },
+          { aspect: "Thread-safe", left: "Yes, because immutable", right: "No" },
+          { aspect: "String pool", left: "Literals are pooled", right: "Not pooled" },
+          { aspect: "Use it for", left: "Fixed text and keys", right: "Building text in loops" },
+        ],
+        venn: {
+          left: ["Immutable", "String pool", "Thread-safe"],
+          both: ["Holds characters", "length()", "charAt()"],
+          right: ["Mutable", "append()", "Fast in loops"],
+        },
+      } },
+
+      // ---- Graphs: x/y points. xScale "log2" spaces doublings evenly.
+      { type: "graph", topic: 6, page: 7, title: "Speed-up from more threads (Amdahl's law)", spec: {
+        xLabel: "Threads", yLabel: "Speed-up", xScale: "log2",
+        series: [
+          { name: "95% parallel", points: [[1, 1], [2, 1.9], [4, 3.48], [8, 5.93], [16, 9.14], [32, 12.55], [64, 15.42]] },
+          { name: "75% parallel", points: [[1, 1], [2, 1.6], [4, 2.29], [8, 2.91], [16, 3.37], [32, 3.66], [64, 3.82]] },
+          { name: "50% parallel", points: [[1, 1], [2, 1.33], [4, 1.6], [8, 1.78], [16, 1.88], [32, 1.94], [64, 1.97]] },
+        ],
+        note: "The serial part limits the speed-up, however many threads you add.",
+      } },
+      { type: "graph", topic: 5, page: 6, title: "Time for get(i) in the middle of a list", spec: {
+        xLabel: "Elements in the list", yLabel: "Time (µs)",
+        series: [
+          { name: "LinkedList", points: [[1000, 1], [10000, 10], [25000, 25], [50000, 50], [100000, 100]] },
+          { name: "ArrayList", points: [[1000, 0.01], [10000, 0.01], [25000, 0.01], [50000, 0.01], [100000, 0.01]] },
+        ],
+        note: "Mock timings: ArrayList stays flat (O(1)); LinkedList grows with n (O(n)).",
+      } },
+      { type: "graph", topic: 2, page: 4, title: "Building a string in a loop", spec: {
+        xLabel: "Loop iterations", yLabel: "Time (ms)",
+        series: [
+          { name: "String +", points: [[1000, 0.25], [5000, 6.25], [10000, 25], [20000, 100], [40000, 400]] },
+          { name: "StringBuilder", points: [[1000, 0.04], [5000, 0.2], [10000, 0.4], [20000, 0.8], [40000, 1.6]] },
+        ],
+        note: "Mock timings: + copies the whole string every time (quadratic); StringBuilder appends in place (linear).",
+      } },
+
+      // ---- Formulas: KaTeX. @0, @1… in tex are the symbols, coloured on the page.
+      { type: "formula", topic: 5, page: 6, title: "When a HashMap resizes", spec: {
+        tex: "@0 = @1 \\times @2",
+        symbols: [
+          { tex: "T", meaning: "Threshold: the number of entries that triggers a resize" },
+          { tex: "C", meaning: "Capacity: the number of buckets (16 by default)" },
+          { tex: "L", meaning: "Load factor (0.75 by default)" },
+        ],
+        example: "16 × 0.75 = 12, so the 13th entry doubles the table to 32 buckets.",
+      } },
+      { type: "formula", topic: 5, page: 6, title: "Which bucket a key goes in", spec: {
+        tex: "@0 = @1 \\mathbin{\\&} (@2 - 1)",
+        symbols: [
+          { tex: "i", meaning: "Bucket index" },
+          { tex: "h", meaning: "The key's spread hash code" },
+          { tex: "n", meaning: "Table size, always a power of two" },
+        ],
+        example: "With n = 16, h & 15 keeps the last 4 bits of the hash.",
+      } },
+      { type: "formula", topic: 5, page: 6, title: "How an ArrayList grows", spec: {
+        tex: "@0 = @1 + \\left\\lfloor \\frac{@1}{2} \\right\\rfloor",
+        symbols: [
+          { tex: "C_{new}", meaning: "New capacity after growing" },
+          { tex: "C_{old}", meaning: "Capacity when the array is full" },
+        ],
+        example: "10 → 15 → 22 → 33: each time it grows by half.",
+      } },
+      { type: "formula", topic: 6, page: 7, title: "Amdahl's law", spec: {
+        tex: "@0 = \\dfrac{1}{(1 - @1) + \\dfrac{@1}{@2}}",
+        symbols: [
+          { tex: "S", meaning: "Speed-up over one thread" },
+          { tex: "p", meaning: "Fraction of the work that can run in parallel" },
+          { tex: "n", meaning: "Number of threads" },
+        ],
+        example: "p = 0.75, n = 4: S = 1 / (0.25 + 0.1875) ≈ 2.29.",
+      } },
+      { type: "formula", topic: 2, page: 4, title: "String.hashCode()", spec: {
+        tex: "@0 = \\sum_{@1=0}^{@2-1} @3[@1] \\cdot 31^{@2-1-@1}",
+        symbols: [
+          { tex: "h", meaning: "The string's hash code" },
+          { tex: "i", meaning: "Position of a character" },
+          { tex: "n", meaning: "Length of the string" },
+          { tex: "s", meaning: "The string's characters" },
+        ],
+        example: "\"ab\".hashCode() = 97 × 31 + 98 = 3105.",
+      } },
+
+      // ---- Figures from the PDF: a placeholder image with numbered hotspots (x, y in % of the image).
+      { type: "figure", topic: 4, page: 1, title: "Figure 1.2: JVM architecture", spec: {
+        image: "assets/figures/jvm-architecture.svg", width: 800, height: 520,
+        hotspots: [
+          { x: 50, y: 13.5, label: "Class loader" },
+          { x: 15, y: 44, label: "Method area" },
+          { x: 32.5, y: 44, label: "Heap" },
+          { x: 50, y: 44, label: "Java stacks" },
+          { x: 67.5, y: 44, label: "PC registers" },
+          { x: 85, y: 44, label: "Native method stacks" },
+          { x: 14, y: 80, label: "Interpreter" },
+          { x: 31, y: 80, label: "JIT compiler" },
+          { x: 48, y: 80, label: "Garbage collector" },
+          { x: 80, y: 80, label: "Native method interface" },
+        ],
+      } },
+      { type: "figure", topic: 6, page: 7, title: "Figure 7.1: Thread states", spec: {
+        image: "assets/figures/thread-states.svg", width: 800, height: 460,
+        hotspots: [
+          { x: 11, y: 50, label: "New" },
+          { x: 37, y: 50, label: "Runnable" },
+          { x: 65, y: 17.4, label: "Blocked" },
+          { x: 65, y: 50, label: "Waiting" },
+          { x: 65, y: 82.6, label: "Timed waiting" },
+          { x: 90, y: 50, label: "Terminated" },
+        ],
+      } },
+
+      // ---- Mnemonics: acronym cards. icon is a Lucide icon name.
+      { type: "mnemonic", topic: 1, page: 3, title: "A PIE", spec: {
+        acronym: "APIE", phrase: "A PIE: the four pillars of OOP",
+        letters: [
+          { letter: "A", word: "Abstraction", meaning: "Show what it does, hide how", icon: "eye-off" },
+          { letter: "P", word: "Polymorphism", meaning: "One name, many forms", icon: "shapes" },
+          { letter: "I", word: "Inheritance", meaning: "A child class extends a parent", icon: "git-fork" },
+          { letter: "E", word: "Encapsulation", meaning: "Private data behind methods", icon: "lock" },
+        ],
+      } },
+      { type: "mnemonic", topic: 2, page: 4, title: "I P E", spec: {
+        acronym: "IPE", phrase: "I Prefer Equals: three String facts",
+        letters: [
+          { letter: "I", word: "Immutable", meaning: "Every change makes a new String", icon: "lock-keyhole" },
+          { letter: "P", word: "Pool", meaning: "Literals are stored once and shared", icon: "database" },
+          { letter: "E", word: "Equals", meaning: "Compare contents with equals(), not ==", icon: "equal" },
+        ],
+      } },
+      { type: "mnemonic", topic: 3, page: 5, title: "Tiny Cats Find Two Toys", spec: {
+        acronym: "TCFTT", phrase: "Tiny Cats Find Two Toys: the five exception keywords",
+        letters: [
+          { letter: "T", word: "try", meaning: "Wraps the risky code", icon: "shield" },
+          { letter: "C", word: "catch", meaning: "Handles a matching exception", icon: "hand" },
+          { letter: "F", word: "finally", meaning: "Always runs, for clean-up", icon: "check-check" },
+          { letter: "T", word: "throw", meaning: "Raises an exception now", icon: "send" },
+          { letter: "T", word: "throws", meaning: "Declares what a method may pass on", icon: "megaphone" },
+        ],
+      } },
+      { type: "mnemonic", topic: 4, page: 2, title: "My Huge Stack Packs Nuts", spec: {
+        acronym: "MHSPN", phrase: "My Huge Stack Packs Nuts: the JVM memory areas",
+        letters: [
+          { letter: "M", word: "Method area", meaning: "Class data and static variables", icon: "book-open" },
+          { letter: "H", word: "Heap", meaning: "Every object lives here", icon: "boxes" },
+          { letter: "S", word: "Stack", meaning: "One per thread: frames and locals", icon: "layers" },
+          { letter: "P", word: "PC register", meaning: "The instruction being run", icon: "map-pin" },
+          { letter: "N", word: "Native method stack", meaning: "For native (C/C++) code", icon: "cpu" },
+        ],
+      } },
+      { type: "mnemonic", topic: 5, page: 6, title: "Lazy Students Queue for Maggi", spec: {
+        acronym: "LSQM", phrase: "Lazy Students Queue for Maggi: the core collection types",
+        letters: [
+          { letter: "L", word: "List", meaning: "Ordered, duplicates allowed", icon: "list-ordered" },
+          { letter: "S", word: "Set", meaning: "Unique items only", icon: "fingerprint" },
+          { letter: "Q", word: "Queue", meaning: "First in, first out", icon: "users" },
+          { letter: "M", word: "Map", meaning: "Key → value pairs", icon: "key-round" },
+        ],
+      } },
+      { type: "mnemonic", topic: 6, page: 7, title: "New Runners Bring Water To Tracks", spec: {
+        acronym: "NRBWTT", phrase: "New Runners Bring Water To Tracks: the thread states in order",
+        letters: [
+          { letter: "N", word: "New", meaning: "Created, start() not called yet", icon: "sparkles" },
+          { letter: "R", word: "Runnable", meaning: "Running or ready to run", icon: "play" },
+          { letter: "B", word: "Blocked", meaning: "Waiting for a lock", icon: "ban" },
+          { letter: "W", word: "Waiting", meaning: "Until another thread notifies it", icon: "hourglass" },
+          { letter: "T", word: "Timed waiting", meaning: "sleep() or wait with a timeout", icon: "timer" },
+          { letter: "T", word: "Terminated", meaning: "run() has finished", icon: "square" },
+        ],
+      } },
+
+      // ---- Memory palace (Max): one placeholder image per topic and a story.
+      // **words** in the story are the things to remember (blanked in Blank labels).
+      { type: "palace", topic: 1, page: 3, title: "Your front room", spec: {
+        image: "assets/palace/java-topic-1.svg", place: "Your front room",
+        story: "You walk in and find a **capsule** sealed shut on the sofa: nothing gets out except through its tiny door, like **private fields** behind **getters and setters**. On the wall hangs your grandfather's portrait, and your face is in it: you **inherit** his nose through **extends**. The TV switches between a cricket match and a cooking show from one remote: one button, many forms, **polymorphism**. The curtain is drawn so you see the window frame but not the street: **abstraction**.",
+      } },
+      { type: "palace", topic: 2, page: 4, title: "The kitchen", spec: {
+        image: "assets/palace/java-topic-2.svg", place: "The kitchen",
+        story: "A string of chillies hangs carved in **stone**: you can't change it, only carve a whole new one, because Strings are **immutable**. In the corner is a **pool** of water where everyone dips the same cup, the **string pool** sharing literals. A builder in a hard hat stirs the dal and keeps adding to the same pot: **StringBuilder** changes in place. On the fridge a note says: compare with **equals()**, not **==**.",
+      } },
+      { type: "palace", topic: 3, page: 5, title: "The staircase", spec: {
+        image: "assets/palace/java-topic-3.svg", place: "The staircase",
+        story: "You **try** to climb the stairs carrying a tower of plates. One slips and your friend **catch**es it. Whatever happens, at the top your mother **finally** makes you wash your hands. A **checked** parcel waits on the landing: the postman (the **compiler**) won't leave until you sign for it or pass it on with **throws**. A banana peel on a step is a **RuntimeException**: nobody warned you, you just slip.",
+      } },
+      { type: "palace", topic: 4, page: 1, title: "The study desk", spec: {
+        image: "assets/palace/java-topic-4.svg", place: "The study desk",
+        story: "On your desk sits a toolkit (**JDK**) holding a lunchbox (**JRE**) holding a tiny machine (**JVM**). You feed it a recipe card written in **bytecode** and the **class loader** files it in a drawer. The machine reads slowly at first with its **interpreter**, but for recipes you cook every day a **JIT compiler** translates them by heart. Under the desk a robot vacuum, the **garbage collector**, sucks up objects nobody points at.",
+      } },
+      { type: "palace", topic: 5, page: 6, title: "The bookshelf", spec: {
+        image: "assets/palace/java-topic-5.svg", place: "The bookshelf",
+        story: "The top shelf holds a **List** of textbooks in order, two copies of the same one allowed. The middle shelf is a **Set** of trophies: no duplicates. The bottom shelf is a **Map**: every key hook holds exactly one bag. Your little brother left an **ArrayList** of numbered boxes you can grab by index, and a **LinkedList** paper chain where each link holds the next.",
+      } },
+      { type: "palace", topic: 6, page: 7, title: "The balcony", spec: {
+        image: "assets/palace/java-topic-6.svg", place: "The balcony",
+        story: "Runners line up on the balcony. A **new** runner only moves when the whistle blows **start()**, not **run()**. One is **blocked** at the gate waiting for the single key, held by whoever is **synchronized** on it. Another is **waiting** for a friend to **notify** her, and one is taking a timed nap with **sleep()**. The last one crosses the line: **terminated**.",
+      } },
+    ]),
+    // Videos page. Generated videos all play VIDEO_FILE (a 60 s placeholder);
+    // duration (seconds) is where each one ends. captions: [seconds, text].
+    videos: generatedVideos("java", {
+      full: { title: "Full explainer: Java", duration: 60, captions: [
+        [0, "Welcome to your full explainer for Java."],
+        [5, "We'll walk through all six topics in about a minute."],
+        [10, "First, OOP: abstraction, polymorphism, inheritance and encapsulation. Remember A PIE."],
+        [17, "Strings are immutable. Every change makes a new String, so build text with StringBuilder."],
+        [24, "Exceptions: checked ones must be caught or declared, unchecked ones extend RuntimeException."],
+        [31, "javac turns your code into bytecode, and the JVM runs it on any platform."],
+        [38, "Collections: a List keeps order, a Set keeps unique items, and a Map pairs keys with values."],
+        [45, "Threads run work side by side. Call start(), not run(), and use synchronized for shared data."],
+        [52, "That's the whole set. Test yourself with a quiz next."],
+      ] },
+      topics: [
+        { topic: 1, title: "OOP in under a minute", duration: 54, captions: [
+          [0, "Object-oriented programming builds programs from classes and objects."],
+          [6, "Four pillars hold it up. An easy way to remember them: A PIE."],
+          [12, "Abstraction shows what an object does and hides how it does it."],
+          [19, "Polymorphism means one name, many forms: overloading at compile time, overriding at runtime."],
+          [28, "Inheritance lets a subclass extend a parent class and reuse its code."],
+          [35, "Encapsulation keeps fields private behind getters and setters."],
+          [43, "In the exam, define each pillar and give a one-line Java example."],
+        ] },
+        { topic: 2, title: "Strings and StringBuilder", duration: 50, captions: [
+          [0, "In Java, a String can never change once it's created."],
+          [6, "When you 'modify' a String, Java quietly makes a new object."],
+          [13, "String literals live in the string pool, so identical literals share one object."],
+          [21, "That's why == can be true for literals, but you should always compare with equals()."],
+          [30, "Building text in a loop? Use StringBuilder: it edits in place and is much faster."],
+          [40, "StringBuffer does the same, but it's synchronized and slower."],
+        ] },
+        { topic: 3, title: "Exception handling, step by step", duration: 56, captions: [
+          [0, "An exception is an event that breaks the normal flow of your program."],
+          [6, "Every exception extends Throwable, which splits into Error and Exception."],
+          [13, "Checked exceptions, like IOException, must be caught or declared with throws."],
+          [21, "Unchecked exceptions extend RuntimeException, like NullPointerException."],
+          [29, "Put risky code in try, handle it in catch, and clean up in finally."],
+          [38, "finally always runs, unless the JVM exits first with System.exit()."],
+          [46, "throw raises an exception; throws declares one in the method signature."],
+        ] },
+        { topic: 4, title: "How the JVM runs your code", duration: 52, captions: [
+          [0, "You write Java source code in a .java file."],
+          [6, "javac compiles it into bytecode, stored in .class files."],
+          [13, "The class loader loads those classes into the JVM."],
+          [20, "The interpreter runs the bytecode, and the JIT compiler turns hot code into native code."],
+          [30, "Objects live on the heap; each thread has its own stack for method calls."],
+          [39, "The garbage collector frees objects that nothing points to any more."],
+          [45, "JDK is the JRE plus tools; the JRE is the JVM plus libraries."],
+        ] },
+        { topic: 5, title: "The Collections Framework", duration: 55, captions: [
+          [0, "The Collections Framework gives you ready-made data structures."],
+          [6, "A List keeps items in order and allows duplicates: ArrayList and LinkedList."],
+          [14, "ArrayList is fast to read by index; LinkedList is fast to add and remove at the ends."],
+          [23, "A Set keeps only unique items: HashSet, or TreeSet when you need them sorted."],
+          [32, "A Map stores key and value pairs: HashMap and TreeMap."],
+          [40, "HashMap allows one null key, keeps no order, and isn't synchronized."],
+          [48, "Pick a structure by asking: do I need order, uniqueness, or lookup by key?"],
+        ] },
+        { topic: 6, title: "Multithreading basics", duration: 58, captions: [
+          [0, "A thread is an independent path of execution inside your program."],
+          [6, "Create one by extending Thread or implementing Runnable."],
+          [13, "Always call start(). Calling run() just runs the code on the current thread."],
+          [21, "A thread moves through states: New, Runnable, Blocked, Waiting, Timed waiting and Terminated."],
+          [31, "When threads share data, synchronized lets only one in at a time."],
+          [40, "That prevents race conditions, where the result depends on timing."],
+          [48, "Thread.sleep() pauses the current thread without releasing its locks."],
+        ] },
+      ],
+    }),
+    // Related YouTube videos (real videos; titles, channels and lengths as on YouTube).
+    // topic null = the whole subject.
+    youtube: youtubeVideos("java", [
+      { id: "eIrMbAQSU34", topic: null, title: "Java Full Course for Beginners", channel: "Programming with Mosh", duration: 9048 },
+      { id: "A74TOX803D0", topic: null, title: "Java Programming for Beginners – Full Course", channel: "freeCodeCamp.org", duration: 15059 },
+      { id: "-HafzawNlUo", topic: 1, title: "OOPS Concepts in Java Explained with Examples || Java Programming for Beginners", channel: "Sundeep Saradhi Kanthety", duration: 1224 },
+      { id: "IUv1es3wnKM", topic: 1, title: "Inheritance, Polymorphism, Encapsulation, And Abstraction", channel: "Kulesh Uchiha", duration: 1832 },
+      { id: "46T2wD3IuhM", topic: 1, title: "OOP 3 | Principles - Inheritance, Polymorphism, Encapsulation, Abstraction", channel: "Kunal Kushwaha", duration: 7971 },
+      { id: "_drNcLWgUlE", topic: 2, title: "String vs StringBuilder vs StringBuffer | What is Immutability? | Java String Operations", channel: "Geekific", duration: 717 },
+      { id: "SY-h-gwCF-U", topic: 2, title: "String vs StringBuilder vs StringBuffer in Java | Immutability & Thread Safety Explained", channel: "The Curious Coder", duration: 1824 },
+      { id: "BZe6RgxGkyo", topic: 2, title: "Java Strings Complete Guide | String Pool, Immutability, StringBuilder, StringBuffer & Differences", channel: "codemonarch", duration: 3704 },
+      { id: "oR2CVVjCsCA", topic: 3, title: "#9.1 Java Tutorial | Exception Handling Try Catch Finally", channel: "Telusko", duration: 372 },
+      { id: "_j862nsfSzY", topic: 3, title: "Java Exception Handling - Exceptions in Java - try-catch-finally Exception Handling in Java", channel: "ProgrammingKnowledge", duration: 1215 },
+      { id: "cAoymPToQdg", topic: 4, title: "How the Java Virtual Machine Works (and Why You Should Care)", channel: "The Coding Gopher", duration: 244 },
+      { id: "xidtAKnzEU8", topic: 4, title: "JVM Architecture | Compile, Build, Execute Flow of Java Program | Runtime Data Area", channel: "Lazy Programmer", duration: 352 },
+      { id: "QHIWkwxs0AI", topic: 4, title: "JVM Architecture", channel: "BigDataElearning", duration: 498 },
+      { id: "vbhxCQTg0CY", topic: 5, title: "Java Collection Framework Explained | ArrayList, LinkedList, HashSet, HashMap & More", channel: "Coding with Sudhir", duration: 13425 },
+      { id: "cfyMXtnyu_s", topic: 6, title: "Java Multithreading Thread and Runnable Tutorial", channel: "Java Guides", duration: 1904 },
+      { id: "oQ8EnpUeC34", topic: 6, title: "Multithreading in Java | Full Course", channel: "Orkhan Gasanov", duration: 8669 },
+      { id: "WldMTtUWqTg", topic: 6, title: "Java Concurrency & Multithreading Complete Course in 2 Hours | Zero to Hero", channel: "Riddhi Dutta", duration: 7026 },
     ]),
     recordings: [],
     written: written("java", [
@@ -735,6 +1269,10 @@
     if (!user.testPatterns) user.testPatterns = clone(SEED_TEST_PATTERNS);
     for (const set of data.sets) {
       if (!set.quizHistory) set.quizHistory = seedQuizHistory(set);
+      const seedSet = SEED_SETS.find((x) => x.id === set.id) || {};
+      if (!set.visuals) set.visuals = clone(seedSet.visuals || []);
+      if (set.videos === undefined) set.videos = clone(seedSet.videos || null);
+      if (!set.youtube) set.youtube = clone(seedSet.youtube || []);
     }
     return data;
   }
@@ -816,6 +1354,7 @@
       written: [],
       mnemonics: [],
       diagrams: [],
+      visuals: [],
       recordings: [],
       quizHistory: [],
       planExamDate: null,
@@ -1335,6 +1874,69 @@
     persist();
   }
 
+  // ---------- Videos page ----------
+  // Per set: { watched: { videoId: true }, notes: { videoId: [{ id, t, text }] },
+  // generated: [video] } (generated = Max videos made from a topic search).
+
+  function videoStateOf(set) {
+    if (!set.videoState) set.videoState = { watched: {}, notes: {}, generated: [] };
+    return set.videoState;
+  }
+
+  function findSet(setId, fn) {
+    const set = load().sets.find((s) => s.id === setId);
+    if (!set) throw new Error(`${fn}: no set "${setId}"`);
+    return set;
+  }
+
+  function getVideoState(setId) {
+    return clone(videoStateOf(findSet(setId, "getVideoState")));
+  }
+
+  function setVideoWatched(setId, videoId, watched) {
+    const state = videoStateOf(findSet(setId, "setVideoWatched"));
+    if (watched) state.watched[videoId] = true;
+    else delete state.watched[videoId];
+    persist();
+  }
+
+  // t: seconds into the video, or null (YouTube videos, where the page can't read the time).
+  function addVideoNote(setId, videoId, t, text) {
+    const state = videoStateOf(findSet(setId, "addVideoNote"));
+    const note = { id: `vn-${Date.now().toString(36)}`, t, text, at: new Date().toISOString() };
+    (state.notes[videoId] = state.notes[videoId] || []).push(note);
+    persist();
+    return clone(note);
+  }
+
+  function deleteVideoNote(setId, videoId, noteId) {
+    const state = videoStateOf(findSet(setId, "deleteVideoNote"));
+    state.notes[videoId] = (state.notes[videoId] || []).filter((n) => n.id !== noteId);
+    persist();
+  }
+
+  // Mock "generate a video" (Max): a script built from the searched topic.
+  function addGeneratedVideo(setId, query) {
+    const state = videoStateOf(findSet(setId, "addGeneratedVideo"));
+    const name = query.trim().replace(/\s+/g, " ");
+    const nice = name.charAt(0).toUpperCase() + name.slice(1);
+    const video = {
+      id: `${setId}-gen-${Date.now().toString(36)}`, topicId: null, query: name, generated: true,
+      title: `Explainer: ${nice}`, duration: 48, createdAt: new Date().toISOString(),
+      captions: [
+        [0, `Let's explain ${name}.`],
+        [6, `First, what ${name} is, in one sentence.`],
+        [13, "Next, how it works, step by step."],
+        [22, "Here's a short example you could write in the exam."],
+        [31, `The mistakes students most often make with ${name}.`],
+        [40, "Quick recap: three points to remember."],
+      ],
+    };
+    state.generated.push(video);
+    persist();
+    return clone(video);
+  }
+
   function exportData() {
     return JSON.stringify(load(), null, 2);
   }
@@ -1422,6 +2024,7 @@
     getCurrentTopic, setCurrentTopic, skipTopic, setPlanOptions, duplicateSet,
     isLessonDone, completeLesson, completeCheckpoint, saveQuizAttempt,
     getTestPatterns, saveTestPattern, deleteTestPattern,
+    VIDEO_FILE, getVideoState, setVideoWatched, addVideoNote, deleteVideoNote, addGeneratedVideo,
     logActivity, getActivities, getStudiedToday, addStudyMinute, dismissHint,
     toISODate, parseDate, addDays, todayISO, daysUntil,
   });

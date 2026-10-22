@@ -34,9 +34,13 @@ js/notes-content.js  Seed document for the notes editor: Java notes HTML, auto s
 assets/sample.pdf  Mock Java lecture notes (7 pages) that the notes' source stars point into
 assets/sample-pdf-source.html  HTML the PDF is printed from (rebuild steps are in its header comment)
 assets/sample-pdf.js  Generated base64 copy of the PDF for file:// use. Regenerate: python assets/make-sample-pdf-js.py
+assets/videos/explainer-placeholder.mp4  60 s placeholder that every generated video plays (1.3 MB H.264).
+                   Rebuild: open assets/make-placeholder-video.html over http in Chrome/Edge, Record, Download.
+assets/figures/, assets/palace/  Placeholder images for Visual memory (PDF figures without labels; one room
+                   per Java topic). Regenerate: python assets/make-visual-placeholders.py
 data/colleges.json Source list: 226 colleges {name, short, city, state, type, university}
 data/colleges.js   Generated copy for file:// use. Regenerate: python data/make-colleges-js.py
-app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practice-test, visual-memory,
+app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practice-test, visual-memory, videos,
                    record, plan, calendar, tutor, profile, style-test (effects review page)
 ```
 
@@ -52,7 +56,7 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
   - Set section, shown only inside a set:
     - a set switcher that keeps you on the same tool for the new set
     - Study Plan, Tutor and Record Lecture links
-    - a collapsible Practice & Activities group: Notes, Flashcards, Quizzes, Practice Tests, Visual Memory
+    - a collapsible Practice & Activities group: Notes, Flashcards, Quizzes, Practice Tests, Visual Memory, Videos
     - Upload, and a Materials list
   - Lock icons mark Pro tools for free users.
 - **Top bar (glass):** breadcrumb, Upgrade pill (free users only), Share (mock), study timer (+1 minute per visible minute) and an avatar linking to Profile.
@@ -103,7 +107,19 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - **Flashcards:** spaced repetition. "Got it" doubles the interval; "Again" resets it. Study view is centred: card, then Show answer / Again · Got it, then ‹ counter › arrows, session progress, and the Study/Browse + topic toolbar. Keys: Space flips, ← → move between cards, 1 Again, 2 Got it.
 - **Quiz:** `?topic=` starts a topic quiz; `?unit=` runs a 5-question knowledge check. Results update topic mastery. The card is centred; below it "Your quiz history" (attempts, best, average, then rows with date, topics, score, time, Review and Retake). Every finished quiz, and every study plan lesson quiz, is saved with `saveQuizAttempt()` to `set.quizHistory` (newest first, 100 kept). Review opens each question with your answer, the correct one and the explanation.
 - **Practice test:** Pro. Setup: choose a source (upload a reference paper as PDF/image, a saved pattern, or the standard 25-mark format) → for uploads an "Analysing the paper pattern" screen (mock: ~4s of steps, then a fixed 50-mark pattern) with a thumbnail of page 1 → pattern editor (name, total marks, duration, sections table: questions, marks each, question type, choice rule "Answer any N of M"; warnings when marks don't add up or the set lacks questions; "Save this pattern"; paper thumbnail beside the table) → "Generate test" → exam mode. In a section with a choice rule, the best N answers count. Saved patterns live in `user.testPatterns` (`getTestPatterns`, `saveTestPattern`, `deleteTestPattern`); one example is seeded. Exam mode, palette, confirm before submit and key-point marking are unchanged.
-- **Visual memory:** Pro. Mnemonics and diagrams.
+- **Visual memory:** Pro (Memory palace: Max). Ten tabs: Concept map, Flowchart, Hierarchy, Comparison, Timeline, Graph, Formula, From your PDF, Mnemonics, Memory palace. `?tab=` opens one (kept in the URL); `?topic=` picks that topic's visual.
+  - Nothing is stored as an image: each visual is a small spec in `set.visuals` (`visuals()` in `data.js`; mock specs for Java only, other sets get a whole-set concept map and "not yet" states). Fields: `type`, `topicId`, `page` (source PDF page), `title`, and `spec` or `mermaid`.
+  - Concept map: JSON nodes + edges (`cross: true` for extra links) → SVG radial tree. Click a node to expand its children (refits the view), drag to pan, Ctrl + wheel / pinch / + − buttons to zoom, Fit. Keyboard: Enter on a node; arrows pan and + − zoom when the map has focus. Every set also gets an "All topics" map built from its topics and the key terms in its notes.
+  - Flowchart, Hierarchy, Timeline: Mermaid text rendered by Mermaid 10.9.1 (jsDelivr), themed from the CSS tokens (`mermaidConfig()`), `htmlLabels: false` so labels are SVG text. Sized to fit the width and 600px height, but never under 80%: phones scroll sideways.
+  - Comparison: JSON rows → table, or a Venn view (side by side; stacked under 560px).
+  - Graph: JSON series → SVG line chart drawn at the stage's pixel width (`xScale: "log2"` for doublings).
+  - Formula: KaTeX 0.16.9 (cdnjs); `@0`, `@1`… in the TeX are the symbols, each coloured, with meanings listed below.
+  - From your PDF: placeholder figure from `assets/figures/` with numbered hotspots (x/y in % of the image) and a legend; hover/focus links the two.
+  - Mnemonics: acronym card, one Lucide icon (0.460.0, jsDelivr) per letter; the letter shows if Lucide can't load.
+  - Memory palace (Max; Pro users see an upgrade card): one placeholder room per topic from `assets/palace/` and a story whose **words** are the things to remember.
+  - Toolbar on every visual: topic selector, source star (opens `assets/sample.pdf#page=N` in a new tab), Blank labels, Download (PNG or SVG). If a library can't load, the tab says so and shows the spec text.
+  - Blank labels: every element with `data-label` is hidden and a "?" chip sits on top (positioned from the label's box, re-laid out on resize, pan, zoom and scroll). Clicking a chip opens a small form; answers are checked ignoring case, punctuation and small words, allowing a typo or two, and for long labels most of the key words are enough. Wrong → red chip and "Show answer"; right → green label; a score with Reset shows in the toolbar.
+  - Download: the stage is cloned with computed styles inlined into an SVG `<foreignObject>`; PNG draws that SVG on a 2× canvas. Web fonts and KaTeX fonts fall back to system fonts in the file. Downloading with Blank labels on gives a worksheet with the blanks.
 - **Record lecture:** Pro. Two columns (stacked under 760px of page width).
   - Left: lecture title, record button, timer, a scrolling waveform from the microphone (Web Audio `AnalyserNode`, RMS per frame), Pause / Resume / Stop. `MediaRecorder` keeps the audio; after Stop you can listen back, and transcript timestamps jump the player.
   - Right: live transcript (Web Speech API, `en-IN`, continuous, restarted after silences), each line stamped `[mm:ss]` from when the phrase started, interim words in italics, auto-scroll that pauses when you scroll up ("Jump to latest").
@@ -115,6 +131,14 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
   - Mic in the input: Web Speech API, `en-IN`, continuous with interim results, written into the box live. Unsupported browsers or a blocked mic get a toast.
   - Read aloud on each reply: `speechSynthesis` (prefers an en-IN voice), play/pause (pause remembers the word reached), speed 0.75–2× (remembered in `skipxam.tutorRate`; changing it restarts from the current word), stop. If audio fails, a toast says so.
   - Call: full-screen dialog with the mascot inside a pulsing radial orb (breathes while listening, pulses per spoken word), word-by-word captions of the tutor and live captions of what you say, a call timer, and Mute / Switch to chat / End call. It takes turns: speak, then listen. You can answer quiz questions by saying a letter ("option B") or the option. Everything said is added to the chat, with "Voice call started" / "Call ended · m:ss" notes. Without speech recognition (or with the mic blocked) a "Type instead" box appears; without audio the captions still advance at speaking pace.
+- **Videos:** a Udemy-style lecture page; what it shows depends on the plan. Data: `set.videos` (`{ full, topics }`, from `generatedVideos()`: id, title, topicId, duration in seconds, captions `[[seconds, text]]`) and `set.youtube` (`youtubeVideos()`: YouTube id, title, channel, duration, topicId; real videos whose titles, channels and lengths were checked against YouTube). Sets without specs get videos built from their topics and notes. Per-set state in `set.videoState` (`getVideoState`, `setVideoWatched`, `addVideoNote`, `deleteVideoNote`, `addGeneratedVideo`).
+  - Free: a locked "Get an AI explainer video for this set" card (Upgrade) above a grid of YouTube links (open youtube.com in a new tab), filtered by topic chips (`?topic=` preselects one).
+  - Pro and Max: title, then the player, then Overview / Transcript / Notes tabs; on the right a collapsible "Course content" panel (remembered in `skipxam.videoPanel`; under 900px of width it sits below the tabs).
+  - Player: every generated video plays `VIDEO_FILE` and stops at its own duration. Custom controls: play/pause, −10 s, speed menu 0.5–2× (remembered), +10 s, time, captions on/off (remembered), volume (hidden on phones), full screen, a seek bar. Captions from the caption lines sit above the controls. Prev/next buttons on the edges walk the list the video came from. Controls fade after 2.5 s of playing without the pointer moving. Keys when the player has focus: Space/K play, ←/→ or J/L 10 s, C captions, M mute, F full screen. At the end: watched is ticked and a Replay / Next card shows.
+  - Transcript: caption lines with [mm:ss]; click to seek; the current line is highlighted and kept in view. Notes: "Add note at 02:14" pauses and opens a form; notes are listed by time (click the time to jump), deletable.
+  - Panel tabs: Generated videos (watched checkbox, number, title, play icon + duration, current row highlighted) and YouTube (related to the current video's topic, thumbnail from img.youtube.com, plays in a youtube-nocookie iframe in the main player; Overview links to YouTube).
+  - Pro: one "Full explainer: <set>" video, then the topic videos as locked rows with a Max badge (open the pricing modal). Max: the full explainer plus one video per topic, and "Search a topic to generate a video": a generating row (Writing script → Creating visuals → Adding voice, 1.4 s each) that becomes a playable "Explainer: <topic>" row (mock script). A search matching a topic (every word in its name, e.g. "threads" → Multithreading) or an earlier search opens that video instead.
+  - `?video=` / `?yt=` open a video (kept in the URL as you switch).
 - **Calendar:** month and week views, a mock Google Calendar connection, reminders.
 
 ### Study plan (`plan`)
@@ -213,6 +237,8 @@ app/*.html         Pages: dashboard, sets, set, notes, flashcards, quiz, practic
 - Decide whether `app/style-test.html` stays in the repo.
 
 ## 7. Known issues
+
+- **Videos:** YouTube embeds can refuse to play on pages opened from disk (file://) or for videos whose owners turned off embedding; the Overview tab links to YouTube. Python's `http.server` doesn't support range requests, so the placeholder video can't seek until it has fully loaded there (file:// and real servers are fine).
 
 - **Data resets on version bumps:** bumping `STORAGE_KEY` re-seeds the demo data. The v7 migration in `data.js` adds new fields without a reset.
 - **Mock-data quirks:** the seeded activity times are relative to page load, so some time-based checks vary. College types in `colleges.json` were written from memory; verify them.

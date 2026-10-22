@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+<rect width="800" height="500" fill="#332c3d"/>
+<polygon points="0,500 120,380 680,380 800,500" fill="#4a3d36"/>
+<polygon points="0,0 120,60 120,380 0,500" fill="#000" opacity=".18"/>
+<polygon points="800,0 680,60 680,380 800,500" fill="#000" opacity=".12"/>
+<line x1="120" y1="60" x2="680" y2="60" stroke="#000" stroke-opacity=".2" stroke-width="2"/>
+<ellipse cx="400" cy="440" rx="220" ry="34" fill="#a78bfa" opacity=".25"/>
+<rect x="140" y="110" width="80" height="120" fill="#a78bfa" opacity=".25" stroke="#c9b9a0" stroke-width="4"/>
+<rect x="220" y="340" width="420" height="40" fill="#a78bfa" opacity="0.45"/><rect x="280" y="300" width="360" height="40" fill="#a78bfa" opacity="0.53"/><rect x="340" y="260" width="300" height="40" fill="#a78bfa" opacity="0.61"/><rect x="400" y="220" width="240" height="40" fill="#a78bfa" opacity="0.69"/><rect x="460" y="180" width="180" height="40" fill="#a78bfa" opacity="0.77"/><rect x="520" y="140" width="120" height="40" fill="#a78bfa" opacity="0.85"/><rect x="560" y="120" width="12" height="260" fill="#cbbfa9"/>
+<text x="784" y="488" text-anchor="end" font-family="Arial, sans-serif" font-size="13" fill="#f0eae0" opacity=".6">Placeholder image</text>
+</svg>

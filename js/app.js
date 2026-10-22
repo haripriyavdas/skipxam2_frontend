@@ -40,6 +40,7 @@
     image: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'),
     slides: svg('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/>'),
     play: svg('<path d="M7 4.5v15l12-7.5z"/>', 'fill="currentColor"'),
+    video: svg('<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/>'),
     pause: svg('<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>', 'fill="currentColor"'),
     stop: svg('<rect x="6" y="6" width="12" height="12" rx="2"/>', 'fill="currentColor"'),
     send: svg('<path d="M4 12 20 4l-6 16-3-7-7-1z"/>'),
@@ -67,6 +68,7 @@
     record: { label: "Record lecture", href: "record.html", icon: "mic", pro: true },
     tutor: { label: "Tutor", href: "tutor.html", icon: "tutor", pro: true },
     visual: { label: "Visual memory", href: "visual-memory.html", icon: "visual", pro: true },
+    videos: { label: "Videos", href: "videos.html", icon: "video" }, // Free: YouTube only; Pro/Max add AI videos
     flashcards: { label: "Flashcards", href: "flashcards.html", icon: "cards" },
     quiz: { label: "Quiz", href: "quiz.html", icon: "quiz" },
     test: { label: "Practice tests", href: "practice-test.html", icon: "test", pro: true },
@@ -812,12 +814,13 @@
     { tool: "quiz", page: "quiz", label: "Quizzes" },
     { tool: "test", page: "practice-test", label: "Practice Tests" },
     { tool: "visual", page: "visual-memory", label: "Visual Memory" },
+    { tool: "videos", page: "videos", label: "Videos" },
   ];
 
   const PAGE_TITLES = {
     dashboard: "Home", sets: "My Sets", calendar: "Calendar", profile: "Profile", tutor: "Tutor",
     plan: "Study Plan", record: "Record Lecture", notes: "Notes", flashcards: "Flashcards",
-    quiz: "Quizzes", "practice-test": "Practice Tests", "visual-memory": "Visual Memory",
+    quiz: "Quizzes", "practice-test": "Practice Tests", "visual-memory": "Visual Memory", videos: "Videos",
   };
 
   const COLLAPSE_KEY = "skipxam.sidebarCollapsed";
