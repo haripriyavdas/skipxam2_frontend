@@ -782,6 +782,7 @@
       else if (event.key === "ArrowUp") { event.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
       else if (event.key === "Enter" || event.key === " ") { event.preventDefault(); pickMenuOption(option); }
       else if (event.key === "Escape" || event.key === "Tab") {
+        if (event.key === "Escape") event.preventDefault(); // close the menu, not a surrounding modal
         const btn = option.closest(".menu-select").querySelector(".menu-select-btn");
         closeMenuSelects();
         if (event.key === "Escape") btn.focus();

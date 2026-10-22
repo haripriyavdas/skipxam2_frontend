@@ -99,15 +99,20 @@
   const SEED_USER = {
     name: "Samrat",
     email: "samrat@example.com",
-    college: "City Engineering College",
-    course: "B.E. Computer Science",
-    year: 2,
+    // College comes from data/colleges.json (or is typed in by the user).
+    // level: ug | pg | diploma. course: an id from COURSES in profile.js.
+    education: {
+      college: { name: "BMS College of Engineering", short: "BMSCE", city: "Bengaluru", state: "Karnataka", type: "autonomous", university: "Visvesvaraya Technological University" },
+      level: "ug", course: "be-btech", degreeName: "B.E.", branch: "Mechanical", otherCourse: "", year: 2,
+    },
     avatar: null, // a small data: URL once the user uploads a picture
     streak: 7,
     plan: "free", // "free" | "pro" | "max"
     billing: "monthly", // "monthly" | "yearly"
     planRenews: null, // renewal date for paid plans
-    referral: { code: "SAMRAT7", joined: 2 },
+    referral: { code: "SAMRAT7", joined: 3, daysEarned: 21 },
+    badges: {}, // { badgeId: "YYYY-MM-DD" earned }; seed() fills the demo's earned badges
+    timeFlags: { earlyBird: false, nightOwl: true }, // studied before 8 AM / after 11 PM
     settings: { dailyGoal: 60, notifications: true, theme: "dark" },
     stats: { flashcardsReviewed: 412, quizzesTaken: 23, quizScoreTotal: 1656 }, // average = total / taken
     history: {}, // { "YYYY-MM-DD": minutes } for past days; seed() fills 16 weeks
@@ -526,6 +531,7 @@
     const user = clone(SEED_USER);
     user.studyToday.date = today;
     user.history = seedHistory(today);
+    user.badges = seedBadges(today);
 
     const ago = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
     const activities = [
@@ -560,12 +566,36 @@
     return history;
   }
 
+  function seedBadges(today) {
+    return {
+      streak3: addDays(today, -49), streak7: addDays(today, -45), firstQuiz: addDays(today, -60),
+      cards100: addDays(today, -30), hours10: addDays(today, -70), nightOwl: addDays(today, -12),
+    };
+  }
+
+  // Adds fields introduced after v7 so saved data keeps working without a reset.
+  function migrate(data) {
+    const user = data.user;
+    const today = todayISO();
+    if (!user.education) {
+      user.education = clone(SEED_USER.education);
+      delete user.college;
+      delete user.course;
+      delete user.year;
+    }
+    if (!user.referral || user.referral.daysEarned === undefined) user.referral = clone(SEED_USER.referral);
+    if (!user.badges || !Object.keys(user.badges).length) user.badges = seedBadges(today);
+    if (!user.timeFlags) user.timeFlags = clone(SEED_USER.timeFlags);
+    return data;
+  }
+
   function load() {
     if (memory) return memory;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        memory = JSON.parse(raw);
+        memory = migrate(JSON.parse(raw));
+        persist();
         return memory;
       }
     } catch (err) {
@@ -950,6 +980,9 @@
     const today = todayISO();
     if (!user.studyToday || user.studyToday.date !== today) user.studyToday = { date: today, minutes: 0 };
     user.studyToday.minutes += 1;
+    const hour = new Date().getHours();
+    if (hour < 8) user.timeFlags.earlyBird = true;
+    if (hour >= 23) user.timeFlags.nightOwl = true;
     persist();
     return user.studyToday.minutes;
   }
@@ -996,7 +1029,7 @@
 
   function updateProfile(fields) {
     const user = load().user;
-    for (const key of ["name", "college", "course", "year", "avatar"]) {
+    for (const key of ["name", "education", "avatar"]) {
       if (key in fields) user[key] = fields[key];
     }
     persist();
@@ -1063,6 +1096,20 @@
     stats.quizzesTaken += 1;
     stats.quizScoreTotal += pct;
     persist();
+  }
+
+  // Records today's date for newly earned badges. Already earned ones keep their date.
+  function awardBadges(ids) {
+    const user = load().user;
+    let changed = false;
+    for (const id of ids) {
+      if (!user.badges[id]) {
+        user.badges[id] = todayISO();
+        changed = true;
+      }
+    }
+    if (changed) persist();
+    return clone(user.badges);
   }
 
   function exportData() {
@@ -1143,7 +1190,7 @@
   Object.assign(window, {
     getSets, getSet, saveSet, createSet, deleteSet, addFilesToSet, markSetOpened,
     getUser, setPlan, resetData, updateProfile, saveSettings, applyTheme,
-    getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData,
+    getStudyHistory, getStreaks, getUserStats, recordQuizScore, exportData, awardBadges,
     getFolders, createFolder, moveSetToFolder,
     getSetMastery, setTaskDone, recordActivity, isCardDue, reviewFlashcard, applyTopicResults,
     adjustTopicMastery, setExamDate, buildStudyPlan, createRecording, setCalendarConnected, saveReminders,

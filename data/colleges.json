@@ -1,0 +1,1810 @@
+[
+  {
+    "name": "ABV-Indian Institute of Information Technology and Management Gwalior",
+    "short": "IIITM Gwalior",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Alagappa College of Technology",
+    "short": "ACT Chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Anna University"
+  },
+  {
+    "name": "Aligarh Muslim University",
+    "short": "AMU",
+    "city": "Aligarh",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Aligarh Muslim University"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Bhopal",
+    "short": "AIIMS Bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Bhubaneswar",
+    "short": "AIIMS Bhubaneswar",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Jodhpur",
+    "short": "AIIMS Jodhpur",
+    "city": "Jodhpur",
+    "state": "Rajasthan",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, New Delhi",
+    "short": "AIIMS Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Patna",
+    "short": "AIIMS Patna",
+    "city": "Patna",
+    "state": "Bihar",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Raipur",
+    "short": "AIIMS Raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "All India Institute of Medical Sciences, Rishikesh",
+    "short": "AIIMS Rishikesh",
+    "city": "Rishikesh",
+    "state": "Uttarakhand",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Amity University, Noida",
+    "short": "Amity Noida",
+    "city": "Noida",
+    "state": "Uttar Pradesh",
+    "type": "private",
+    "university": "Amity University Uttar Pradesh"
+  },
+  {
+    "name": "Amrita Vishwa Vidyapeetham, Coimbatore",
+    "short": "Amrita Coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "type": "deemed",
+    "university": "Amrita Vishwa Vidyapeetham"
+  },
+  {
+    "name": "Andhra University College of Engineering",
+    "short": "AUCE",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Andhra University"
+  },
+  {
+    "name": "Armed Forces Medical College",
+    "short": "AFMC",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Maharashtra University of Health Sciences"
+  },
+  {
+    "name": "Ashoka University",
+    "short": "Ashoka",
+    "city": "Sonipat",
+    "state": "Haryana",
+    "type": "private",
+    "university": "Ashoka University"
+  },
+  {
+    "name": "Assam Engineering College",
+    "short": "AEC",
+    "city": "Guwahati",
+    "state": "Assam",
+    "type": "government",
+    "university": "Assam Science and Technology University"
+  },
+  {
+    "name": "B.J. Medical College",
+    "short": "BJMC Ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "type": "government",
+    "university": "Gujarat University"
+  },
+  {
+    "name": "Banaras Hindu University",
+    "short": "BHU",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Banaras Hindu University"
+  },
+  {
+    "name": "Bangalore Institute of Technology",
+    "short": "BIT Bangalore",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Bangalore Medical College and Research Institute",
+    "short": "BMCRI",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "Rajiv Gandhi University of Health Sciences"
+  },
+  {
+    "name": "Birla Institute of Technology and Science, Pilani",
+    "short": "BITS Pilani",
+    "city": "Pilani",
+    "state": "Rajasthan",
+    "type": "deemed",
+    "university": "Birla Institute of Technology and Science, Pilani"
+  },
+  {
+    "name": "Birla Institute of Technology, Mesra",
+    "short": "BIT Mesra",
+    "city": "Ranchi",
+    "state": "Jharkhand",
+    "type": "deemed",
+    "university": "Birla Institute of Technology (Deemed University)"
+  },
+  {
+    "name": "BITS Pilani, Hyderabad Campus",
+    "short": "BITS Hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "deemed",
+    "university": "Birla Institute of Technology and Science, Pilani"
+  },
+  {
+    "name": "BMS College of Engineering",
+    "short": "BMSCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "BMS Institute of Technology and Management",
+    "short": "BMSIT",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "CEPT University",
+    "short": "CEPT",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "type": "private",
+    "university": "CEPT University"
+  },
+  {
+    "name": "Chaitanya Bharathi Institute of Technology",
+    "short": "CBIT",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "autonomous",
+    "university": "Osmania University"
+  },
+  {
+    "name": "Chandigarh University",
+    "short": "Chandigarh University",
+    "city": "Mohali",
+    "state": "Punjab",
+    "type": "private",
+    "university": "Chandigarh University"
+  },
+  {
+    "name": "Christ University",
+    "short": "Christ University",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "Christ (Deemed to be University)"
+  },
+  {
+    "name": "Christian Medical College, Vellore",
+    "short": "CMC Vellore",
+    "city": "Vellore",
+    "state": "Tamil Nadu",
+    "type": "private",
+    "university": "The Tamil Nadu Dr. M.G.R. Medical University"
+  },
+  {
+    "name": "CMR Institute of Technology",
+    "short": "CMRIT",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Cochin University of Science and Technology",
+    "short": "CUSAT",
+    "city": "Kochi",
+    "state": "Kerala",
+    "type": "government",
+    "university": "Cochin University of Science and Technology"
+  },
+  {
+    "name": "COEP Technological University",
+    "short": "COEP",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "COEP Technological University"
+  },
+  {
+    "name": "Coimbatore Institute of Technology",
+    "short": "CIT Coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "College of Engineering Trivandrum",
+    "short": "CET",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "type": "government",
+    "university": "APJ Abdul Kalam Technological University"
+  },
+  {
+    "name": "College of Engineering, Guindy",
+    "short": "CEG",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Anna University"
+  },
+  {
+    "name": "Cotton University",
+    "short": "Cotton University",
+    "city": "Guwahati",
+    "state": "Assam",
+    "type": "government",
+    "university": "Cotton University"
+  },
+  {
+    "name": "Dayananda Sagar College of Engineering",
+    "short": "DSCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Delhi Technological University",
+    "short": "DTU",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Delhi Technological University"
+  },
+  {
+    "name": "Dhirubhai Ambani University",
+    "short": "DA-IICT",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "type": "private",
+    "university": "Dhirubhai Ambani University"
+  },
+  {
+    "name": "Dr B R Ambedkar National Institute of Technology Jalandhar",
+    "short": "NIT Jalandhar",
+    "city": "Jalandhar",
+    "state": "Punjab",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Dwarkadas J. Sanghvi College of Engineering",
+    "short": "DJSCE",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Fergusson College",
+    "short": "Fergusson College",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "Savitribai Phule Pune University"
+  },
+  {
+    "name": "Gandhi Medical College",
+    "short": "GMC Secunderabad",
+    "city": "Secunderabad",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Kaloji Narayana Rao University of Health Sciences"
+  },
+  {
+    "name": "Gargi College",
+    "short": "Gargi College",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "GITAM (Deemed to be University)",
+    "short": "GITAM",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "type": "deemed",
+    "university": "GITAM (Deemed to be University)"
+  },
+  {
+    "name": "Goa College of Engineering",
+    "short": "GEC Goa",
+    "city": "Ponda",
+    "state": "Goa",
+    "type": "government",
+    "university": "Goa University"
+  },
+  {
+    "name": "Government College of Engineering, Chhatrapati Sambhajinagar",
+    "short": "GECA",
+    "city": "Chhatrapati Sambhajinagar",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Dr. Babasaheb Ambedkar Marathwada University"
+  },
+  {
+    "name": "Government College of Technology, Coimbatore",
+    "short": "GCT Coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Anna University"
+  },
+  {
+    "name": "Government Engineering College, Thrissur",
+    "short": "GEC Thrissur",
+    "city": "Thrissur",
+    "state": "Kerala",
+    "type": "government",
+    "university": "APJ Abdul Kalam Technological University"
+  },
+  {
+    "name": "Government Medical College, Thiruvananthapuram",
+    "short": "GMC Thiruvananthapuram",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "type": "government",
+    "university": "Kerala University of Health Sciences"
+  },
+  {
+    "name": "Grant Government Medical College",
+    "short": "Grant Medical College",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Maharashtra University of Health Sciences"
+  },
+  {
+    "name": "Graphic Era (Deemed to be University)",
+    "short": "Graphic Era",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "type": "deemed",
+    "university": "Graphic Era (Deemed to be University)"
+  },
+  {
+    "name": "H.R. College of Commerce and Economics",
+    "short": "HR College",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "private",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Hansraj College",
+    "short": "Hansraj",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Harcourt Butler Technical University",
+    "short": "HBTU",
+    "city": "Kanpur",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Harcourt Butler Technical University"
+  },
+  {
+    "name": "Heritage Institute of Technology",
+    "short": "HITK",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "type": "autonomous",
+    "university": "Maulana Abul Kalam Azad University of Technology"
+  },
+  {
+    "name": "Hindu College",
+    "short": "Hindu College",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Indian Institute of Engineering Science and Technology, Shibpur",
+    "short": "IIEST Shibpur",
+    "city": "Howrah",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Allahabad",
+    "short": "IIIT Allahabad",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Dharwad",
+    "short": "IIIT Dharwad",
+    "city": "Dharwad",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Guwahati",
+    "short": "IIIT Guwahati",
+    "city": "Guwahati",
+    "state": "Assam",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Kottayam",
+    "short": "IIIT Kottayam",
+    "city": "Kottayam",
+    "state": "Kerala",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Lucknow",
+    "short": "IIIT Lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Pune",
+    "short": "IIIT Pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology Sri City",
+    "short": "IIIT Sri City",
+    "city": "Sri City",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Information Technology, Design and Manufacturing Kancheepuram",
+    "short": "IIITDM Kancheepuram",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology (BHU) Varanasi",
+    "short": "IIT BHU",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology (ISM) Dhanbad",
+    "short": "IIT Dhanbad",
+    "city": "Dhanbad",
+    "state": "Jharkhand",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Bhilai",
+    "short": "IIT Bhilai",
+    "city": "Bhilai",
+    "state": "Chhattisgarh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Bhubaneswar",
+    "short": "IIT Bhubaneswar",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Bombay",
+    "short": "IIT Bombay",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Delhi",
+    "short": "IIT Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Dharwad",
+    "short": "IIT Dharwad",
+    "city": "Dharwad",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Gandhinagar",
+    "short": "IIT Gandhinagar",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Goa",
+    "short": "IIT Goa",
+    "city": "Ponda",
+    "state": "Goa",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Guwahati",
+    "short": "IIT Guwahati",
+    "city": "Guwahati",
+    "state": "Assam",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Hyderabad",
+    "short": "IIT Hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Indore",
+    "short": "IIT Indore",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Jammu",
+    "short": "IIT Jammu",
+    "city": "Jammu",
+    "state": "Jammu and Kashmir",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Jodhpur",
+    "short": "IIT Jodhpur",
+    "city": "Jodhpur",
+    "state": "Rajasthan",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Kanpur",
+    "short": "IIT Kanpur",
+    "city": "Kanpur",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Kharagpur",
+    "short": "IIT Kharagpur",
+    "city": "Kharagpur",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Madras",
+    "short": "IIT Madras",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Mandi",
+    "short": "IIT Mandi",
+    "city": "Mandi",
+    "state": "Himachal Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Palakkad",
+    "short": "IIT Palakkad",
+    "city": "Palakkad",
+    "state": "Kerala",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Patna",
+    "short": "IIT Patna",
+    "city": "Patna",
+    "state": "Bihar",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Roorkee",
+    "short": "IIT Roorkee",
+    "city": "Roorkee",
+    "state": "Uttarakhand",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Ropar",
+    "short": "IIT Ropar",
+    "city": "Rupnagar",
+    "state": "Punjab",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indian Institute of Technology Tirupati",
+    "short": "IIT Tirupati",
+    "city": "Tirupati",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Indraprastha College for Women",
+    "short": "IP College",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Indraprastha Institute of Information Technology Delhi",
+    "short": "IIIT Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "IIIT Delhi (State University)"
+  },
+  {
+    "name": "Institute of Chemical Technology",
+    "short": "ICT Mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "deemed",
+    "university": "Institute of Chemical Technology"
+  },
+  {
+    "name": "International Institute of Information Technology Bangalore",
+    "short": "IIIT Bangalore",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "IIIT Bangalore (Deemed University)"
+  },
+  {
+    "name": "International Institute of Information Technology Bhubaneswar",
+    "short": "IIIT Bhubaneswar",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "type": "government",
+    "university": "IIIT Bhubaneswar (State University)"
+  },
+  {
+    "name": "International Institute of Information Technology Hyderabad",
+    "short": "IIIT Hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "deemed",
+    "university": "IIIT Hyderabad (Deemed University)"
+  },
+  {
+    "name": "J.C. Bose University of Science and Technology, YMCA",
+    "short": "JC Bose YMCA",
+    "city": "Faridabad",
+    "state": "Haryana",
+    "type": "government",
+    "university": "J.C. Bose University of Science and Technology, YMCA"
+  },
+  {
+    "name": "Jadavpur University",
+    "short": "Jadavpur University",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "Jadavpur University"
+  },
+  {
+    "name": "Jai Hind College",
+    "short": "Jai Hind College",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Jain University",
+    "short": "Jain University",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "Jain (Deemed-to-be University)"
+  },
+  {
+    "name": "Jamia Millia Islamia",
+    "short": "Jamia",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Jamia Millia Islamia"
+  },
+  {
+    "name": "Jawaharlal Nehru University",
+    "short": "JNU",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Jawaharlal Nehru University"
+  },
+  {
+    "name": "JNTUH University College of Engineering, Science and Technology Hyderabad",
+    "short": "JNTUH",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Jawaharlal Nehru Technological University Hyderabad"
+  },
+  {
+    "name": "JNTUK University College of Engineering Kakinada",
+    "short": "JNTUK",
+    "city": "Kakinada",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Jawaharlal Nehru Technological University Kakinada"
+  },
+  {
+    "name": "JSS Academy of Technical Education",
+    "short": "JSSATE Noida",
+    "city": "Noida",
+    "state": "Uttar Pradesh",
+    "type": "private",
+    "university": "Dr. A.P.J. Abdul Kalam Technical University"
+  },
+  {
+    "name": "JSS Science and Technology University",
+    "short": "JSS STU",
+    "city": "Mysuru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "JSS Science and Technology University"
+  },
+  {
+    "name": "K J Somaiya College of Engineering",
+    "short": "KJSCE",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "private",
+    "university": "Somaiya Vidyavihar University"
+  },
+  {
+    "name": "Kalinga Institute of Industrial Technology",
+    "short": "KIIT",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "type": "deemed",
+    "university": "KIIT (Deemed to be University)"
+  },
+  {
+    "name": "Kasturba Medical College, Manipal",
+    "short": "KMC Manipal",
+    "city": "Manipal",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "Manipal Academy of Higher Education"
+  },
+  {
+    "name": "King George's Medical University",
+    "short": "KGMU",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "King George's Medical University"
+  },
+  {
+    "name": "Kirori Mal College",
+    "short": "KMC Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "KLE Technological University",
+    "short": "KLE Tech",
+    "city": "Hubballi",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "KLE Technological University"
+  },
+  {
+    "name": "Koneru Lakshmaiah Education Foundation",
+    "short": "KL University",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "type": "deemed",
+    "university": "Koneru Lakshmaiah Education Foundation"
+  },
+  {
+    "name": "Kumaraguru College of Technology",
+    "short": "KCT",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "L.D. College of Engineering",
+    "short": "LDCE",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "type": "government",
+    "university": "Gujarat Technological University"
+  },
+  {
+    "name": "Lady Shri Ram College for Women",
+    "short": "LSR",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Lovely Professional University",
+    "short": "LPU",
+    "city": "Phagwara",
+    "state": "Punjab",
+    "type": "private",
+    "university": "Lovely Professional University"
+  },
+  {
+    "name": "Loyola College",
+    "short": "Loyola College",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "University of Madras"
+  },
+  {
+    "name": "M S Ramaiah Institute of Technology",
+    "short": "MSRIT",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "M S Ramaiah Medical College",
+    "short": "Ramaiah Medical College",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Rajiv Gandhi University of Health Sciences"
+  },
+  {
+    "name": "Madan Mohan Malaviya University of Technology",
+    "short": "MMMUT",
+    "city": "Gorakhpur",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Madan Mohan Malaviya University of Technology"
+  },
+  {
+    "name": "Madras Christian College",
+    "short": "MCC",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "University of Madras"
+  },
+  {
+    "name": "Madras Institute of Technology",
+    "short": "MIT Chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Anna University"
+  },
+  {
+    "name": "Madras Medical College",
+    "short": "MMC",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "The Tamil Nadu Dr. M.G.R. Medical University"
+  },
+  {
+    "name": "Malaviya National Institute of Technology Jaipur",
+    "short": "MNIT Jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Manipal Institute of Technology",
+    "short": "MIT Manipal",
+    "city": "Manipal",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "Manipal Academy of Higher Education"
+  },
+  {
+    "name": "Manipal University Jaipur",
+    "short": "MUJ",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "type": "private",
+    "university": "Manipal University Jaipur"
+  },
+  {
+    "name": "Maulana Azad Medical College",
+    "short": "MAMC",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Maulana Azad National Institute of Technology Bhopal",
+    "short": "MANIT Bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Medical College, Kolkata",
+    "short": "Medical College Kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "West Bengal University of Health Sciences"
+  },
+  {
+    "name": "Miranda House",
+    "short": "Miranda House",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "MIT World Peace University",
+    "short": "MIT-WPU",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "private",
+    "university": "MIT World Peace University"
+  },
+  {
+    "name": "Model Engineering College",
+    "short": "MEC Kochi",
+    "city": "Kochi",
+    "state": "Kerala",
+    "type": "government",
+    "university": "APJ Abdul Kalam Technological University"
+  },
+  {
+    "name": "Motilal Nehru National Institute of Technology Allahabad",
+    "short": "MNNIT Allahabad",
+    "city": "Prayagraj",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Mount Carmel College",
+    "short": "Mount Carmel",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Bengaluru City University"
+  },
+  {
+    "name": "MVJ College of Engineering",
+    "short": "MVJCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "National Institute of Technology Agartala",
+    "short": "NIT Agartala",
+    "city": "Agartala",
+    "state": "Tripura",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Andhra Pradesh",
+    "short": "NIT Andhra Pradesh",
+    "city": "Tadepalligudem",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Arunachal Pradesh",
+    "short": "NIT Arunachal Pradesh",
+    "city": "Jote",
+    "state": "Arunachal Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Calicut",
+    "short": "NIT Calicut",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Delhi",
+    "short": "NIT Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Durgapur",
+    "short": "NIT Durgapur",
+    "city": "Durgapur",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Goa",
+    "short": "NIT Goa",
+    "city": "Ponda",
+    "state": "Goa",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Hamirpur",
+    "short": "NIT Hamirpur",
+    "city": "Hamirpur",
+    "state": "Himachal Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Jamshedpur",
+    "short": "NIT Jamshedpur",
+    "city": "Jamshedpur",
+    "state": "Jharkhand",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Karnataka, Surathkal",
+    "short": "NITK Surathkal",
+    "city": "Mangaluru",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Kurukshetra",
+    "short": "NIT Kurukshetra",
+    "city": "Kurukshetra",
+    "state": "Haryana",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Manipur",
+    "short": "NIT Manipur",
+    "city": "Imphal",
+    "state": "Manipur",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Meghalaya",
+    "short": "NIT Meghalaya",
+    "city": "Shillong",
+    "state": "Meghalaya",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Mizoram",
+    "short": "NIT Mizoram",
+    "city": "Aizawl",
+    "state": "Mizoram",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Nagaland",
+    "short": "NIT Nagaland",
+    "city": "Chumukedima",
+    "state": "Nagaland",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Patna",
+    "short": "NIT Patna",
+    "city": "Patna",
+    "state": "Bihar",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Puducherry",
+    "short": "NIT Puducherry",
+    "city": "Karaikal",
+    "state": "Puducherry",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Raipur",
+    "short": "NIT Raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Rourkela",
+    "short": "NIT Rourkela",
+    "city": "Rourkela",
+    "state": "Odisha",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Sikkim",
+    "short": "NIT Sikkim",
+    "city": "Ravangla",
+    "state": "Sikkim",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Silchar",
+    "short": "NIT Silchar",
+    "city": "Silchar",
+    "state": "Assam",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Srinagar",
+    "short": "NIT Srinagar",
+    "city": "Srinagar",
+    "state": "Jammu and Kashmir",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Tiruchirappalli",
+    "short": "NIT Trichy",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Uttarakhand",
+    "short": "NIT Uttarakhand",
+    "city": "Srinagar (Garhwal)",
+    "state": "Uttarakhand",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Institute of Technology Warangal",
+    "short": "NIT Warangal",
+    "city": "Warangal",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "National Law School of India University",
+    "short": "NLSIU",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "National Law School of India University"
+  },
+  {
+    "name": "Netaji Subhas University of Technology",
+    "short": "NSUT",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "Netaji Subhas University of Technology"
+  },
+  {
+    "name": "New Horizon College of Engineering",
+    "short": "NHCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Nirma University",
+    "short": "Nirma",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "type": "private",
+    "university": "Nirma University"
+  },
+  {
+    "name": "Nitte Meenakshi Institute of Technology",
+    "short": "NMIT",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "NMAM Institute of Technology",
+    "short": "NMAMIT",
+    "city": "Nitte",
+    "state": "Karnataka",
+    "type": "deemed",
+    "university": "Nitte (Deemed to be University)"
+  },
+  {
+    "name": "O.P. Jindal Global University",
+    "short": "JGU",
+    "city": "Sonipat",
+    "state": "Haryana",
+    "type": "private",
+    "university": "O.P. Jindal Global University"
+  },
+  {
+    "name": "Osmania Medical College",
+    "short": "OMC",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Kaloji Narayana Rao University of Health Sciences"
+  },
+  {
+    "name": "Pandit Deendayal Energy University",
+    "short": "PDEU",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "type": "private",
+    "university": "Pandit Deendayal Energy University"
+  },
+  {
+    "name": "Panjab University",
+    "short": "Panjab University",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "type": "government",
+    "university": "Panjab University"
+  },
+  {
+    "name": "PDPM Indian Institute of Information Technology, Design and Manufacturing Jabalpur",
+    "short": "IIITDM Jabalpur",
+    "city": "Jabalpur",
+    "state": "Madhya Pradesh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "PES University",
+    "short": "PES University",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "PES University"
+  },
+  {
+    "name": "Postgraduate Institute of Medical Education and Research",
+    "short": "PGIMER",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "Presidency College, Chennai",
+    "short": "Presidency College",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "government",
+    "university": "University of Madras"
+  },
+  {
+    "name": "Presidency University, Kolkata",
+    "short": "Presidency Kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "type": "government",
+    "university": "Presidency University"
+  },
+  {
+    "name": "PSG College of Technology",
+    "short": "PSG Tech",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "Pune Institute of Computer Technology",
+    "short": "PICT",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "private",
+    "university": "Savitribai Phule Pune University"
+  },
+  {
+    "name": "Punjab Engineering College",
+    "short": "PEC",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "type": "deemed",
+    "university": "Punjab Engineering College (Deemed to be University)"
+  },
+  {
+    "name": "Rajagiri School of Engineering and Technology",
+    "short": "RSET",
+    "city": "Kochi",
+    "state": "Kerala",
+    "type": "private",
+    "university": "APJ Abdul Kalam Technological University"
+  },
+  {
+    "name": "Rajalakshmi Engineering College",
+    "short": "REC Chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "Ramjas College",
+    "short": "Ramjas",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "REVA University",
+    "short": "REVA University",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "REVA University"
+  },
+  {
+    "name": "RV College of Engineering",
+    "short": "RVCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Sardar Patel Institute of Technology",
+    "short": "SPIT",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Sardar Vallabhbhai National Institute of Technology Surat",
+    "short": "SVNIT Surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "SASTRA Deemed University",
+    "short": "SASTRA",
+    "city": "Thanjavur",
+    "state": "Tamil Nadu",
+    "type": "deemed",
+    "university": "SASTRA Deemed University"
+  },
+  {
+    "name": "Sathyabama Institute of Science and Technology",
+    "short": "Sathyabama",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "deemed",
+    "university": "Sathyabama Institute of Science and Technology"
+  },
+  {
+    "name": "Sawai Man Singh Medical College",
+    "short": "SMS Medical College",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "type": "government",
+    "university": "Rajasthan University of Health Sciences"
+  },
+  {
+    "name": "Seth G.S. Medical College",
+    "short": "GSMC",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Maharashtra University of Health Sciences"
+  },
+  {
+    "name": "Shri G.S. Institute of Technology and Science",
+    "short": "SGSITS",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "type": "autonomous",
+    "university": "Rajiv Gandhi Proudyogiki Vishwavidyalaya"
+  },
+  {
+    "name": "Shri Ram College of Commerce",
+    "short": "SRCC",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Shri Ramdeobaba College of Engineering and Management",
+    "short": "RCOEM",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "Rashtrasant Tukadoji Maharaj Nagpur University"
+  },
+  {
+    "name": "Siddaganga Institute of Technology",
+    "short": "SIT Tumakuru",
+    "city": "Tumakuru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Siksha 'O' Anusandhan",
+    "short": "SOA",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "type": "deemed",
+    "university": "Siksha 'O' Anusandhan (Deemed to be University)"
+  },
+  {
+    "name": "Sir M Visvesvaraya Institute of Technology",
+    "short": "Sir MVIT",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Sri Sivasubramaniya Nadar College of Engineering",
+    "short": "SSN",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "Sri Venkateswara College",
+    "short": "Venky",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "government",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "Sri Venkateswara University College of Engineering",
+    "short": "SVUCE",
+    "city": "Tirupati",
+    "state": "Andhra Pradesh",
+    "type": "government",
+    "university": "Sri Venkateswara University"
+  },
+  {
+    "name": "SRM Institute of Science and Technology",
+    "short": "SRM",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "deemed",
+    "university": "SRM Institute of Science and Technology"
+  },
+  {
+    "name": "St. Joseph's University",
+    "short": "St. Joseph's",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "private",
+    "university": "St. Joseph's University"
+  },
+  {
+    "name": "St. Stephen's College",
+    "short": "St. Stephen's",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "type": "private",
+    "university": "University of Delhi"
+  },
+  {
+    "name": "St. Teresa's College",
+    "short": "St. Teresa's",
+    "city": "Kochi",
+    "state": "Kerala",
+    "type": "autonomous",
+    "university": "Mahatma Gandhi University"
+  },
+  {
+    "name": "St. Xavier's College, Kolkata",
+    "short": "St. Xavier's Kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "type": "autonomous",
+    "university": "University of Calcutta"
+  },
+  {
+    "name": "St. Xavier's College, Mumbai",
+    "short": "St. Xavier's Mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Stella Maris College",
+    "short": "Stella Maris",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "University of Madras"
+  },
+  {
+    "name": "SVKM's Narsee Monjee Institute of Management Studies",
+    "short": "NMIMS",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "deemed",
+    "university": "NMIMS (Deemed to be University)"
+  },
+  {
+    "name": "Symbiosis International University",
+    "short": "Symbiosis",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "deemed",
+    "university": "Symbiosis International (Deemed University)"
+  },
+  {
+    "name": "Thapar Institute of Engineering and Technology",
+    "short": "Thapar",
+    "city": "Patiala",
+    "state": "Punjab",
+    "type": "deemed",
+    "university": "Thapar Institute of Engineering and Technology"
+  },
+  {
+    "name": "The LNM Institute of Information Technology",
+    "short": "LNMIIT",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "type": "deemed",
+    "university": "The LNM Institute of Information Technology"
+  },
+  {
+    "name": "The Maharaja Sayajirao University of Baroda",
+    "short": "MSU Baroda",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "type": "government",
+    "university": "The Maharaja Sayajirao University of Baroda"
+  },
+  {
+    "name": "The National Institute of Engineering",
+    "short": "NIE Mysuru",
+    "city": "Mysuru",
+    "state": "Karnataka",
+    "type": "autonomous",
+    "university": "Visvesvaraya Technological University"
+  },
+  {
+    "name": "Thiagarajar College of Engineering",
+    "short": "TCE Madurai",
+    "city": "Madurai",
+    "state": "Tamil Nadu",
+    "type": "autonomous",
+    "university": "Anna University"
+  },
+  {
+    "name": "TKM College of Engineering",
+    "short": "TKMCE",
+    "city": "Kollam",
+    "state": "Kerala",
+    "type": "private",
+    "university": "APJ Abdul Kalam Technological University"
+  },
+  {
+    "name": "University College of Engineering, Osmania University",
+    "short": "UCE Osmania",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "government",
+    "university": "Osmania University"
+  },
+  {
+    "name": "University College, Thiruvananthapuram",
+    "short": "University College",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "type": "government",
+    "university": "University of Kerala"
+  },
+  {
+    "name": "University of Lucknow",
+    "short": "Lucknow University",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "type": "government",
+    "university": "University of Lucknow"
+  },
+  {
+    "name": "University Visvesvaraya College of Engineering",
+    "short": "UVCE",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "type": "government",
+    "university": "University Visvesvaraya College of Engineering"
+  },
+  {
+    "name": "Vasavi College of Engineering",
+    "short": "Vasavi",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "autonomous",
+    "university": "Osmania University"
+  },
+  {
+    "name": "Veer Surendra Sai University of Technology",
+    "short": "VSSUT",
+    "city": "Burla",
+    "state": "Odisha",
+    "type": "government",
+    "university": "Veer Surendra Sai University of Technology"
+  },
+  {
+    "name": "Veermata Jijabai Technological Institute",
+    "short": "VJTI",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "University of Mumbai"
+  },
+  {
+    "name": "Vellore Institute of Technology",
+    "short": "VIT Vellore",
+    "city": "Vellore",
+    "state": "Tamil Nadu",
+    "type": "deemed",
+    "university": "Vellore Institute of Technology"
+  },
+  {
+    "name": "Vishwakarma Institute of Technology",
+    "short": "VIT Pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "Savitribai Phule Pune University"
+  },
+  {
+    "name": "Visvesvaraya National Institute of Technology Nagpur",
+    "short": "VNIT Nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "type": "government",
+    "university": "Institute of National Importance"
+  },
+  {
+    "name": "VNR Vignana Jyothi Institute of Engineering and Technology",
+    "short": "VNR VJIET",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "type": "autonomous",
+    "university": "Jawaharlal Nehru Technological University Hyderabad"
+  },
+  {
+    "name": "Walchand College of Engineering",
+    "short": "WCE Sangli",
+    "city": "Sangli",
+    "state": "Maharashtra",
+    "type": "autonomous",
+    "university": "Shivaji University"
+  }
+]

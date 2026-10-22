@@ -1,7 +1,9 @@
 /*
  * Profile (app/profile.html). Load after data.js and app.js.
- * A bento grid: identity, study heatmap (hero), stats, mastery by set,
- * badges, plan and billing, invite friends, settings, account.
+ * Load college-picker.js and badges.js first.
+ * A bento grid: identity (with Edit profile and Settings), study heatmap
+ * (hero), stats, mastery by set, badges, plan and billing, invite friends,
+ * account. Settings open in a modal from the gear on the identity tile.
  */
 (function () {
   "use strict";
@@ -20,11 +22,76 @@
       : `<span class="badge badge-pro plan-badge">${planLabel(plan)}</span>`;
   }
 
+  // Courses by degree level. `names` lets B.E./B.Tech students pick what
+  // their degree is called; `branches` shows the branch dropdown.
+  const COURSES = {
+    ug: [
+      { id: "be-btech", label: "B.E./B.Tech", names: ["B.E.", "B.Tech"], branches: true },
+      { id: "bsc", label: "B.Sc" }, { id: "bcom", label: "B.Com" }, { id: "ba", label: "B.A." },
+      { id: "bba", label: "BBA" }, { id: "bca", label: "BCA" }, { id: "mbbs", label: "MBBS" },
+      { id: "bds", label: "BDS" }, { id: "bpharm", label: "B.Pharm" }, { id: "barch", label: "B.Arch" },
+      { id: "llb5", label: "LLB (5-year)" }, { id: "bdes", label: "B.Des" }, { id: "other", label: "Other" },
+    ],
+    pg: [
+      { id: "me-mtech", label: "M.E./M.Tech", names: ["M.E.", "M.Tech"], branches: true },
+      { id: "msc", label: "M.Sc" }, { id: "mcom", label: "M.Com" }, { id: "ma", label: "M.A." },
+      { id: "mba", label: "MBA" }, { id: "mca", label: "MCA" }, { id: "md", label: "MD" },
+      { id: "ms-med", label: "MS (Medical)" }, { id: "mpharm", label: "M.Pharm" }, { id: "march", label: "M.Arch" },
+      { id: "llm", label: "LLM" }, { id: "mdes", label: "M.Des" }, { id: "other", label: "Other" },
+    ],
+    diploma: [
+      { id: "dip-eng", label: "Diploma in Engineering", names: ["Diploma"], branches: true },
+      { id: "dpharm", label: "D.Pharm" }, { id: "gnm", label: "GNM (Nursing)" }, { id: "other", label: "Other" },
+    ],
+  };
+  const LEVELS = [
+    { value: "ug", label: "Undergraduate" },
+    { value: "pg", label: "Postgraduate" },
+    { value: "diploma", label: "Diploma" },
+  ];
+  // value is what the profile shows ("B.E. Mechanical").
+  const BRANCHES = [
+    { value: "Mechanical", label: "Mechanical" },
+    { value: "Computer Science", label: "Computer Science" },
+    { value: "ECE", label: "ECE (Electronics and Communication)" },
+    { value: "EEE", label: "EEE (Electrical and Electronics)" },
+    { value: "Civil", label: "Civil" },
+    { value: "ISE", label: "ISE (Information Science)" },
+    { value: "AI & ML", label: "AI & ML" },
+    { value: "Data Science", label: "Data Science" },
+    { value: "Chemical", label: "Chemical" },
+    { value: "Aerospace", label: "Aerospace" },
+    { value: "Biotechnology", label: "Biotechnology" },
+    { value: "Electronics and Instrumentation", label: "Electronics and Instrumentation" },
+    { value: "Industrial Engineering", label: "Industrial Engineering" },
+    { value: "Automobile", label: "Automobile" },
+    { value: "Other", label: "Other" },
+  ];
+  const ordinal = (n) => `${n}${["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || "th"}`;
+
+  function findCourse(level, id) {
+    return (COURSES[level] || COURSES.ug).find((c) => c.id === id) || null;
+  }
+
+  // "B.E. Mechanical, 2nd year"
+  function courseLine(edu) {
+    if (!edu) return "";
+    const course = findCourse(edu.level, edu.course);
+    let name = "";
+    if (course && course.id === "other") name = edu.otherCourse || "";
+    else if (course && course.branches) {
+      const degree = course.names.includes(edu.degreeName) ? edu.degreeName : course.names[0];
+      name = edu.branch && edu.branch !== "Other" ? `${degree} ${edu.branch}` : degree;
+    } else if (course) name = course.label;
+    return [name, edu.year ? `${ordinal(edu.year)} year` : ""].filter(Boolean).join(", ");
+  }
+
   function identityHtml(user) {
-    const details = [user.college, [user.course, user.year ? `Year ${user.year}` : ""].filter(Boolean).join(", ")]
-      .filter(Boolean).map(escapeHtml);
+    const edu = user.education || {};
+    const details = [collegeLabel(edu.college), courseLine(edu)].filter(Boolean).map(escapeHtml);
     return `
       <section class="card tile p-identity" aria-labelledby="p-name">
+        <button type="button" class="icon-btn p-gear" data-open-settings aria-label="Settings" title="Settings">${icon("settings")}</button>
         <label class="p-avatar" title="Change picture">
           <span class="avatar p-avatar-img">${avatarInnerHtml(user)}</span>
           <span class="p-avatar-edit" aria-hidden="true">${icon("edit")}</span>
@@ -35,7 +102,7 @@
             <h1 id="p-name">${escapeHtml(user.name)}</h1>
             ${planBadgeHtml(user.plan)}
           </div>
-          ${details.map((d) => `<p class="muted">${d}</p>`).join("")}
+          ${details.length ? details.map((d) => `<p class="muted">${d}</p>`).join("") : '<p class="muted">Add your college and course</p>'}
           <button type="button" class="btn btn-secondary btn-sm" data-edit-profile>${icon("edit")}Edit profile</button>
         </div>
       </section>`;
@@ -63,48 +130,115 @@
     });
   }
 
+  function optionsHtml(items, selected) {
+    return items.map((o) => `<option value="${escapeHtml(o.value)}"${o.value === selected ? " selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
+  }
+
   function openEditProfile() {
     const user = getUser();
-    const years = [1, 2, 3, 4, 5].map((y) => `<option value="${y}"${user.year === y ? " selected" : ""}>Year ${y}</option>`).join("");
+    const edu = { level: "ug", course: "", degreeName: "", branch: "", otherCourse: "", year: 1, ...(user.education || {}) };
+    const years = [1, 2, 3, 4, 5].map((y) => ({ value: String(y), label: `${ordinal(y)} year` }));
     const modal = openModal({
       title: "Edit profile",
+      className: "edit-profile-modal",
       body: `
-        <form>
+        <form novalidate>
           <div class="field">
             <label class="field-label" for="pf-name">Name</label>
             <input class="input" id="pf-name" name="name" maxlength="60" value="${escapeHtml(user.name)}" required>
           </div>
-          <div class="field">
-            <label class="field-label" for="pf-college">College</label>
-            <input class="input" id="pf-college" name="college" maxlength="80" value="${escapeHtml(user.college || "")}">
+          <div class="field" data-college-picker></div>
+          <div class="pf-row">
+            <div class="field">
+              <label class="field-label" for="pf-level">Degree level</label>
+              <select class="input" id="pf-level" name="level">${optionsHtml(LEVELS, edu.level)}</select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="pf-course">Course</label>
+              <select class="input" id="pf-course" name="course"></select>
+            </div>
           </div>
-          <div class="field">
-            <label class="field-label" for="pf-course">Course</label>
-            <input class="input" id="pf-course" name="course" maxlength="80" value="${escapeHtml(user.course || "")}">
+          <div class="field" data-show="other" hidden>
+            <label class="field-label" for="pf-other">Course name</label>
+            <input class="input" id="pf-other" name="otherCourse" maxlength="80" value="${escapeHtml(edu.otherCourse || "")}">
           </div>
-          <div class="field">
-            <label class="field-label" for="pf-year">Year</label>
-            <select class="input" id="pf-year" name="year">${years}</select>
+          <div class="field" data-show="names" hidden>
+            <span class="field-label" id="pf-degree-label">Your degree is called</span>
+            <fieldset class="segmented" aria-labelledby="pf-degree-label" data-degree-names></fieldset>
           </div>
+          <div class="pf-row">
+            <div class="field" data-show="branches" hidden>
+              <label class="field-label" for="pf-branch">Branch or specialisation</label>
+              <select class="input" id="pf-branch" name="branch">${optionsHtml(BRANCHES, edu.branch)}</select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="pf-year">Year</label>
+              <select class="input" id="pf-year" name="year">${optionsHtml(years, String(edu.year || 1))}</select>
+            </div>
+          </div>
+          <p class="field-hint p-error" data-form-error hidden></p>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
             <button type="submit" class="btn btn-primary">Save</button>
           </div>
         </form>`,
     });
+
     const form = modal.dialog.querySelector("form");
+    const picker = collegePicker(form.querySelector("[data-college-picker]"), { value: edu.college || null });
+    const levelSelect = form.elements.level;
+    const courseSelect = form.elements.course;
+
+    // Course options follow the degree level; the extra fields follow the course.
+    function syncCourse(keepId) {
+      const courses = COURSES[levelSelect.value];
+      const id = courses.some((c) => c.id === keepId) ? keepId : courses[0].id;
+      courseSelect.innerHTML = optionsHtml(courses.map((c) => ({ value: c.id, label: c.label })), id);
+      syncExtras();
+    }
+    function syncExtras() {
+      const course = findCourse(levelSelect.value, courseSelect.value);
+      const show = (key, on) => { form.querySelector(`[data-show="${key}"]`).hidden = !on; };
+      show("other", course.id === "other");
+      show("branches", Boolean(course.branches));
+      show("names", Boolean(course.names && course.names.length > 1));
+      if (course.names) {
+        const current = course.names.includes(edu.degreeName) ? edu.degreeName : course.names[0];
+        form.querySelector("[data-degree-names]").innerHTML = course.names.map((n) => `
+          <label><input type="radio" name="degreeName" value="${n}"${n === current ? " checked" : ""}><span>${n}</span></label>`).join("");
+      }
+    }
+    levelSelect.addEventListener("change", () => syncCourse(""));
+    courseSelect.addEventListener("change", syncExtras);
+    syncCourse(edu.course);
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      const error = form.querySelector("[data-form-error]");
       const name = form.elements.name.value.trim();
-      if (!name) return;
+      const course = findCourse(levelSelect.value, courseSelect.value);
+      const otherCourse = form.elements.otherCourse.value.trim();
+      let message = "";
+      if (!name) message = "Enter your name.";
+      else if (course.id === "other" && !otherCourse) message = "Enter your course name.";
+      error.textContent = message;
+      error.hidden = !message;
+      if (message) return;
+      const checkedName = form.querySelector("[name='degreeName']:checked");
       updateProfile({
         name,
-        college: form.elements.college.value.trim(),
-        course: form.elements.course.value.trim(),
-        year: Number(form.elements.year.value),
+        education: {
+          college: picker.value,
+          level: levelSelect.value,
+          course: course.id,
+          degreeName: course.names ? (checkedName ? checkedName.value : course.names[0]) : "",
+          branch: course.branches ? form.elements.branch.value : "",
+          otherCourse: course.id === "other" ? otherCourse : "",
+          year: Number(form.elements.year.value),
+        },
       });
       queueToast("Profile saved");
-      location.reload(); // the top bar shows the name and picture too
+      location.reload(); // the top bar shows the name too
     });
   }
 
@@ -242,54 +376,6 @@
       </section>`;
   }
 
-  function earnedBadges() {
-    const user = getUser();
-    const stats = getUserStats();
-    const { longest } = getStreaks();
-    const sets = getSets();
-    const activities = getActivities();
-    const hourOf = (a) => new Date(a.at).getHours();
-    const perfect = activities.some((a) => {
-      const m = a.type === "quiz" && a.text.match(/(\d+)\/(\d+)/);
-      return m && m[1] === m[2];
-    });
-    return [
-      { emoji: "🔥", name: "7-day streak", how: "Study 7 days in a row", earned: longest >= 7 },
-      { emoji: "🏆", name: "30-day streak", how: "Study 30 days in a row", earned: longest >= 30 },
-      { emoji: "📝", name: "First practice test", how: "Finish a practice test", earned: activities.some((a) => a.type === "test") },
-      { emoji: "🃏", name: "100 flashcards", how: "Review 100 flashcards", earned: stats.flashcards >= 100 },
-      { emoji: "🧠", name: "1,000 flashcards", how: "Review 1,000 flashcards", earned: stats.flashcards >= 1000 },
-      { emoji: "🦉", name: "Night owl", how: "Study after 11 pm", earned: activities.some((a) => hourOf(a) >= 23 || hourOf(a) < 4) },
-      { emoji: "🌅", name: "Early bird", how: "Study before 7 am", earned: activities.some((a) => hourOf(a) >= 4 && hourOf(a) < 7) },
-      { emoji: "🎯", name: "Perfect quiz", how: "Get every question right in a quiz", earned: perfect },
-      { emoji: "📤", name: "First upload", how: "Upload notes to a study set", earned: sets.some((s) => s.files.length > 0) },
-      { emoji: "🎙️", name: "Lecture recorder", how: "Record a lecture", earned: sets.some((s) => (s.recordings || []).length > 0) },
-      { emoji: "👑", name: "Set master", how: "Reach 90% mastery in a set", earned: sets.some((s) => getSetMastery(s) >= 90) },
-      { emoji: "🤝", name: "Study buddy", how: "Invite a friend who joins", earned: (user.referral || {}).joined > 0 },
-    ];
-  }
-
-  function badgesHtml() {
-    const badges = earnedBadges();
-    const count = badges.filter((b) => b.earned).length;
-    return `
-      <section class="card tile p-badges" aria-labelledby="badges-title">
-        <div class="p-heat-head">
-          <h2 class="tile-title" id="badges-title">Badges</h2>
-          <span class="muted">${count} of ${badges.length} earned</span>
-        </div>
-        <ul class="badge-grid">
-          ${badges.map((b) => `
-            <li class="badge-item${b.earned ? "" : " is-locked"}" tabindex="0"
-              data-tip="${b.earned ? `Earned: ${b.how}` : `Locked: ${b.how}`}"
-              aria-label="${b.name}. ${b.earned ? `Earned: ${b.how}` : `Locked. To earn it: ${b.how}`}">
-              <span class="badge-medal" aria-hidden="true">${b.emoji}</span>
-              <span class="badge-name" aria-hidden="true">${b.name}</span>
-            </li>`).join("")}
-        </ul>
-      </section>`;
-  }
-
   // ---------------------------------------------------------------------------
   // Plan, invite
   // ---------------------------------------------------------------------------
@@ -311,21 +397,30 @@
   }
 
   function inviteHtml(user) {
-    const ref = user.referral || { code: "", joined: 0 };
+    const ref = user.referral || { code: "", joined: 0, daysEarned: 0 };
     const link = INVITE_BASE + ref.code;
+    const message = `I'm using SkipXam to study for my exams. Join with my link and we both get 7 days of Pro: ${link}`;
     return `
       <section class="card tile p-invite" aria-labelledby="invite-title">
-        <h2 class="tile-title" id="invite-title">Invite friends</h2>
-        <p class="muted">Give a friend 7 days of Pro, get 7 days free.</p>
+        <h2 class="tile-title" id="invite-title">Study with your friends</h2>
+        <p class="muted">Share your link. When a friend joins SkipXam, you both get 7 days of Pro.</p>
+        <input class="input p-invite-link" id="invite-link" value="${link}" readonly aria-label="Your invite link">
         <div class="p-invite-row">
-          <input class="input" id="invite-link" value="${link}" readonly aria-label="Your invite link">
-          <button type="button" class="icon-btn" data-copy-invite aria-label="Copy invite link" title="Copy link">${icon("copy")}</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-copy-invite>${icon("copy")}<span data-copy-label>Copy</span></button>
+          <a class="btn btn-sm btn-whatsapp" href="https://wa.me/?text=${encodeURIComponent(message)}" target="_blank" rel="noopener">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2.5a9.4 9.4 0 0 0-8.1 14.2L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.5Zm0 17.1a7.7 7.7 0 0 1-3.9-1.1l-.3-.2-2.8.8.8-2.7-.2-.3A7.7 7.7 0 1 1 12 19.6Zm4.3-5.8c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.3 6.3 0 0 1-3.1-2.7c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.2-.2-.4-.3Z"/></svg>
+            Share on WhatsApp<span class="visually-hidden"> (opens in a new tab)</span>
+          </a>
         </div>
-        <p class="p-joined"><strong>${ref.joined}</strong> ${ref.joined === 1 ? "friend has" : "friends have"} joined</p>
+        <div class="p-invite-stats">
+          <p><strong>${ref.joined}</strong> ${ref.joined === 1 ? "friend" : "friends"} joined</p>
+          <p><strong>${ref.daysEarned}</strong> days of Pro earned</p>
+        </div>
       </section>`;
   }
 
-  async function copyInvite() {
+  let copyTimer;
+  async function copyInvite(button) {
     const input = main.querySelector("#invite-link");
     try {
       await navigator.clipboard.writeText(input.value);
@@ -333,65 +428,93 @@
       input.select();
       document.execCommand("copy"); // file:// pages may not get the async clipboard
     }
-    showToast("Invite link copied");
+    const label = button.querySelector("[data-copy-label]");
+    label.textContent = "Copied";
+    button.classList.add("is-copied");
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => {
+      label.textContent = "Copy";
+      button.classList.remove("is-copied");
+    }, 2000);
   }
 
   // ---------------------------------------------------------------------------
   // Settings (saved as you change them)
   // ---------------------------------------------------------------------------
 
-  function settingsHtml(user) {
+  function settingsBodyHtml(user) {
     const s = user.settings || {};
     const r = user.reminders || {};
     return `
-      <section class="card tile p-settings" aria-labelledby="settings-title">
-        <div class="p-heat-head">
-          <h2 class="tile-title" id="settings-title">Settings</h2>
-          <span class="muted p-saved" role="status" data-saved></span>
-        </div>
-        <div class="p-settings-grid">
-          <div class="p-setting">
-            <label class="field-label" for="set-goal">Daily study goal</label>
-            <div class="p-range-row">
-              <input type="range" id="set-goal" name="dailyGoal" min="15" max="120" step="5" value="${s.dailyGoal || 60}" aria-describedby="set-goal-out">
-              <output id="set-goal-out" for="set-goal">${s.dailyGoal || 60} min</output>
-            </div>
-          </div>
-          <div class="p-setting">
-            <label class="field-label" for="set-reminder">Reminder time</label>
-            <input class="input" type="time" id="set-reminder" name="reminderTime" value="${r.time || "18:00"}">
-          </div>
-          <div class="p-setting">
-            <span class="field-label" id="cal-label">Google Calendar</span>
-            <div class="p-switch-row">
-              <span class="muted">${user.calendarConnected ? "Connected" : "Not connected"}</span>
-              <button type="button" class="btn btn-secondary btn-sm" data-calendar aria-describedby="cal-label">${user.calendarConnected ? "Disconnect" : "Connect"}</button>
-            </div>
-          </div>
-          <div class="p-setting">
-            <span class="field-label" id="notif-label">Notifications</span>
-            <div class="p-switch-row">
-              <span class="muted">Study reminders and streak alerts</span>
-              <input type="checkbox" class="toggle-switch" role="switch" name="notifications" aria-labelledby="notif-label"${s.notifications ? " checked" : ""}>
-            </div>
-          </div>
-          <div class="p-setting">
-            <span class="field-label" id="theme-label">Theme</span>
-            <fieldset class="segmented" aria-labelledby="theme-label">
-              <label><input type="radio" name="theme" value="dark"${s.theme !== "light" ? " checked" : ""}><span>Dark</span></label>
-              <label><input type="radio" name="theme" value="light"${s.theme === "light" ? " checked" : ""}><span>Light</span></label>
-            </fieldset>
+      <div class="p-settings-list">
+        <div class="p-setting">
+          <label class="field-label" for="set-goal">Daily study goal</label>
+          <div class="p-range-row">
+            <input type="range" id="set-goal" name="dailyGoal" min="15" max="120" step="5" value="${s.dailyGoal || 60}" aria-describedby="set-goal-out">
+            <output id="set-goal-out" for="set-goal">${s.dailyGoal || 60} min</output>
           </div>
         </div>
-      </section>`;
+        <div class="p-setting">
+          <label class="field-label" for="set-reminder">Reminder time</label>
+          <input class="input" type="time" id="set-reminder" name="reminderTime" value="${r.time || "18:00"}">
+        </div>
+        <div class="p-setting">
+          <span class="field-label" id="cal-label">Google Calendar</span>
+          <div class="p-switch-row">
+            <span class="muted">${user.calendarConnected ? "Connected" : "Not connected"}</span>
+            <button type="button" class="btn btn-secondary btn-sm" data-calendar aria-describedby="cal-label">${user.calendarConnected ? "Disconnect" : "Connect"}</button>
+          </div>
+        </div>
+        <div class="p-setting">
+          <span class="field-label" id="notif-label">Notifications</span>
+          <div class="p-switch-row">
+            <span class="muted">Study reminders and streak alerts</span>
+            <input type="checkbox" class="toggle-switch" role="switch" name="notifications" aria-labelledby="notif-label"${s.notifications ? " checked" : ""}>
+          </div>
+        </div>
+        <div class="p-setting">
+          <span class="field-label" id="theme-label">Theme</span>
+          <fieldset class="segmented" aria-labelledby="theme-label">
+            <label><input type="radio" name="theme" value="dark"${s.theme !== "light" ? " checked" : ""}><span>Dark</span></label>
+            <label><input type="radio" name="theme" value="light"${s.theme === "light" ? " checked" : ""}><span>Light</span></label>
+          </fieldset>
+        </div>
+      </div>
+      <p class="p-saved" role="status" data-saved></p>
+      <div class="modal-actions"><button type="button" class="btn btn-primary" data-modal-close>Done</button></div>`;
   }
 
-  let savedTimer;
-  function flashSaved() {
-    const el = main.querySelector("[data-saved]");
-    el.textContent = "Saved";
-    clearTimeout(savedTimer);
-    savedTimer = setTimeout(() => { el.textContent = ""; }, 1800);
+  // Changes save as you make them; the modal shows "Saved".
+  function openSettings() {
+    const modal = openModal({ title: "Settings", className: "settings-modal", body: settingsBodyHtml(getUser()) });
+    const body = modal.dialog.querySelector(".modal-body");
+    let savedTimer;
+    const flashSaved = () => {
+      const el = body.querySelector("[data-saved]");
+      el.textContent = "Saved";
+      clearTimeout(savedTimer);
+      savedTimer = setTimeout(() => { el.textContent = ""; }, 1800);
+    };
+
+    body.addEventListener("click", (event) => {
+      if (!event.target.closest("[data-calendar]")) return;
+      setCalendarConnected(!getUser().calendarConnected);
+      body.innerHTML = settingsBodyHtml(getUser());
+      body.querySelector("[data-calendar]").focus();
+      flashSaved();
+    });
+    body.addEventListener("input", (event) => {
+      if (event.target.name === "dailyGoal") body.querySelector("#set-goal-out").textContent = `${event.target.value} min`;
+    });
+    body.addEventListener("change", (event) => {
+      const t = event.target;
+      if (t.name === "dailyGoal") saveSettings({ dailyGoal: Number(t.value) });
+      else if (t.name === "notifications") saveSettings({ notifications: t.checked });
+      else if (t.name === "theme") saveSettings({ theme: t.value });
+      else if (t.name === "reminderTime" && t.value) saveReminders({ time: t.value });
+      else return;
+      flashSaved();
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -502,10 +625,9 @@
         ${heatmapHtml()}
         ${statsHtml()}
         ${masteryHtml()}
-        ${badgesHtml()}
+        ${badgesTileHtml()}
         ${planHtml(user)}
         ${inviteHtml(user)}
-        ${settingsHtml(user)}
         ${accountHtml(user)}
       </div>`;
   }
@@ -513,20 +635,13 @@
   main.addEventListener("click", async (event) => {
     const t = event.target;
     if (t.closest("[data-edit-profile]")) return openEditProfile();
-    if (t.closest("[data-copy-invite]")) return copyInvite();
+    if (t.closest("[data-open-settings]")) return openSettings();
+    if (t.closest("[data-copy-invite]")) return copyInvite(t.closest("[data-copy-invite]"));
     if (t.closest("[data-change-password]")) return openChangePassword();
     if (t.closest("[data-download]")) return downloadData();
     if (t.closest("[data-delete-account]")) return openDeleteAccount();
     if (t.closest("[data-logout]")) {
       location.href = "../index.html"; // mock: no real session
-      return;
-    }
-    if (t.closest("[data-calendar]")) {
-      setCalendarConnected(!getUser().calendarConnected);
-      const card = main.querySelector(".p-settings");
-      card.outerHTML = settingsHtml(getUser());
-      main.querySelector("[data-calendar]").focus();
-      showToast(getUser().calendarConnected ? "Google Calendar connected" : "Google Calendar disconnected");
       return;
     }
     if (t.closest("[data-cancel-plan]")) {
@@ -556,18 +671,7 @@
       } catch (err) {
         showToast("Couldn't read that image. Try a JPG or PNG.");
       }
-      return;
     }
-    if (t.name === "dailyGoal") saveSettings({ dailyGoal: Number(t.value) });
-    else if (t.name === "notifications") saveSettings({ notifications: t.checked });
-    else if (t.name === "theme") saveSettings({ theme: t.value });
-    else if (t.name === "reminderTime" && t.value) saveReminders({ time: t.value });
-    else return;
-    flashSaved();
-  });
-
-  main.addEventListener("input", (event) => {
-    if (event.target.name === "dailyGoal") main.querySelector("#set-goal-out").textContent = `${event.target.value} min`;
   });
 
   // Heatmap: hover, or arrow keys when the grid has focus.
@@ -599,4 +703,5 @@
   });
 
   render();
+  bindBadges(main);
 })();
